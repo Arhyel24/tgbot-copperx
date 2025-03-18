@@ -26,6 +26,7 @@ const {
   requestBankWithdrawalData,
   requestBulkTransferData,
 } = require("./handlers/funds-handler");
+const { helpOptions } = require("./handlers/others");
 require("dotenv").config();
 
 mongoose
@@ -368,8 +369,9 @@ bot.on("callback_query", async (query) => {
     default:
       await bot.sendMessage(
         chatId,
-        "⚠️ Invalid selection. Please choose a valid option."
+        "⚠️ You seem lost!. Please choose a valid option."
       );
+      helpOptions(chatId, bot);
   }
 });
 
@@ -389,26 +391,7 @@ bot.onText(/\/menu/, async (msg) => {
 });
 
 bot.onText(/\/help/, (msg) => {
-  bot.sendMessage(
-    msg.chat.id,
-    `📌 Copperx Bot Help Guide:\n` +
-      `\n🔹 Getting Started\n` +
-      `/start - Start the bot\n` +
-      `/login - Authenticate with Copperx\n` +
-      `/wallets - View & manage wallets\n` +
-      `/balance - Check your USDC balance\n` +
-      `/transactions - View recent transactions\n` +
-      `\n💸 Send & Withdraw\n` +
-      `/send - Transfer USDC to email or wallet\n` +
-      `/withdraw - Withdraw USDC to a bank\n` +
-      `\n🔔 Notifications\n` +
-      `/notifications - Enable/disable deposit alerts\n` +
-      `\n🔐 Account & Security\n` +
-      `/kyc - Check KYC/KYB status\n` +
-      `/logout - Log out of your account\n` +
-      `\n💬 Support\n` +
-      `Support Chat - https://t.me/copperxcommunity/2183`
-  );
+  helpOptions(msg.chat.id, bot)
 });
 
 console.log("Bot is running...");
