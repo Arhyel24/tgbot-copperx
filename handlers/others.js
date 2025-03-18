@@ -9,7 +9,6 @@ export const helpOptions = (chatId, bot) => {
         `/balance - Check your USDC balance\n` +
         `\n💸 Send & Withdraw\n` +
         `/send - Transfer USDC to email or wallet\n` +
-        `\n🔔 Notifications\n` +
         `\n🔐 Account & Security\n` +
         `/kyc - Check KYC/KYB status\n` +
         `/logout - Log out of your account\n` +

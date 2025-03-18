@@ -365,6 +365,10 @@ bot.on("callback_query", async (query) => {
       bot.sendMessage(chatId, "You've been logged out successfully.");
       await newUserMenu(chatId, bot);
       break;
+    
+    case "help":
+      helpOptions(chatId, bot);
+      break;
 
     default:
       await bot.sendMessage(
@@ -374,6 +378,32 @@ bot.on("callback_query", async (query) => {
       helpOptions(chatId, bot);
   }
 });
+
+bot.onText(/\/(.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const command = match[1]; // Extract the command after '/'
+
+  // List of valid commands
+  const validCommands = [
+    "start",
+    "menu",
+    "help",
+    "logout",
+    "wallets",
+    "send",
+  ];
+
+  if (!validCommands.includes(command)) {
+    bot.sendMessage(
+      chatId,
+      `⚠️ Invalid command: *${command}*.\nType /help to see available commands.`,
+      {
+        parse_mode: "Markdown",
+      }
+    );
+  }
+});
+
 
 bot.onText(/\/logout/, async (msg) => {
   const chatId = msg.chat.id;
