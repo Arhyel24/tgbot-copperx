@@ -33,50 +33,39 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-const token = process.env.BOT_TOKEN;
-if (!token) {
-  console.error("BOT_TOKEN is missing in .env file!");
-  process.exit(1);
-}
+const requiredEnvVars = [
+  "BOT_TOKEN",
+  "COPPERX_API",
+  "COPPERX_API_KEY",
+  "PUSHER_KEY",
+  "PUSHER_CLUSTER",
+];
 
-const base_url = process.env.COPPERX_API;
-if (!base_url) {
-  console.error("COPPERX_BASE_URL is missing in .env file!");
-  process.exit(1);
-}
+requiredEnvVars.forEach((envVar) => {
+  if (!process.env[envVar]) {
+    console.error(`${envVar} is missing in .env file!`);
+    process.exit(1);
+  }
+});
 
-const api_key = process.env.COPPERX_API_KEY;
-if (!api_key) {
-  console.error("COPPERX_API_KEY is missing in .env file!");
-  process.exit(1);
-}
+const { BOT_TOKEN, COPPERX_API, COPPERX_API_KEY, PUSHER_KEY, PUSHER_CLUSTER } =
+  process.env;
 
-const pusher_key = process.env.PUSHER_KEY;
-if (!pusher_key) {
-  console.error("PUSHER_KEY is missing in .env file!");
-  process.exit(1);
-}
-
-const pusher_cluster = process.env.PUSHER_CLUSTER;
-if (!pusher_cluster) {
-  console.error("PUSHER_CLUSTER is missing in .env file!");
-  process.exit(1);
-}
 
 const initializePusher = async (organizationId, chatId, token) => {
-  console.log("Org ID:", organizationId);
-  console.log("Chat ID:", chatId);
-  console.log("Token:", token.slice(0, 6) + ".....");
+  // console.log("Org ID:", organizationId);
+  // console.log("Chat ID:", chatId);
+  // console.log("Token:", token.slice(0, 6) + ".....");
 
-  const pusherClient = new Pusher(pusher_key, {
-    cluster: pusher_cluster,
+  const pusherClient = new Pusher(PUSHER_KEY, {
+    cluster: PUSHER_CLUSTER,
     authorizer: (channel) => ({
       authorize: async (socketId, callback) => {
         console.log("Socket ID:", socketId);
         console.log("channel name:", channel.name);
 
         try {
-          const response = await fetch(`${base_url}/api/notifications/auth`, {
+          const response = await fetch(`${COPPERX_API}/api/notifications/auth`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -90,11 +79,11 @@ const initializePusher = async (organizationId, chatId, token) => {
 
           const data = await response.json();
 
-          console.log("Pusher data:", data);
+          // console.log("Pusher data:", data);
 
           if (response.ok) {
             callback(null, data);
-            console.log("✅ Pusher connected");
+            // console.log("✅ Pusher connected");
           } else {
             callback(new Error("Pusher authentication failed"), null);
           }
@@ -109,19 +98,21 @@ const initializePusher = async (organizationId, chatId, token) => {
   const channel = pusherClient.subscribe(`private-org-${organizationId}`);
 
   channel.bind("pusher:subscription_succeeded", () => {
-    console.log("✅ Successfully subscribed to private channel");
+    // console.log("✅ Successfully subscribed to private channel");
+    bot.sendMessage(chatId, "✅ Successfully subscribed deposit notifications");
   });
 
   channel.bind("pusher:subscription_error", (error) => {
     console.error("❌ Subscription error:", error);
   });
 
-  channel.bind("deposit", (data) => {
-    bot.sendMessage(
-      chatId,
-      `💰 *New Deposit Received*\n\n${data.amount} USDC deposited on Solana`
-    );
-  });
+ channel.bind("deposit", (data) => {
+   bot.sendMessage(
+     chatId,
+     `💰 *Deposit Received*\n\nAmount: ${data.amount} ${data.currency}\nStatus: ${data.status}\nFrom: ${data.sourceCountry} → To: ${data.destinationCountry}`
+   );
+ });
+
 
   // Handle reconnection attempts
   pusherClient.connection.bind("disconnected", () => {
@@ -130,11 +121,11 @@ const initializePusher = async (organizationId, chatId, token) => {
   });
 };
 
-console.log("🔹 Bot Token Loaded:", token.slice(0, 10) + "");
-console.log("API endpoint:", base_url);
-console.log("API Key:", api_key.slice(0, 6), "");
+console.log("🔹 Bot Token Loaded:", BOT_TOKEN.slice(0, 10) + "");
+console.log("API endpoint:", COPPERX_API);
+console.log("API Key:", COPPERX_API_KEY.slice(0, 6), "");
 
-const bot = new TelegramBot(token, {
+const bot = new TelegramBot(BOT_TOKEN, {
   polling: {
     interval: 300,
     autoStart: true,
@@ -155,12 +146,7 @@ bot.on("polling_error", (error) => {
 
 bot.onText(/\/start/, async (msg) => {
   const session = await sessions.get(msg.chat.id);
-
-  if (session) {
-    showMainMenu(msg.chat.id, bot);
-    return;
-  }
-  await newUserMenu(msg.chat.id, bot);
+  session ? showMainMenu(msg.chat.id, bot) : newUserMenu(msg.chat.id, bot);
 });
 
 // Handle Login Button Click
@@ -177,10 +163,10 @@ bot.on("callback_query", async (query) => {
       let sid = "";
 
       try {
-        const res = await fetch(`${base_url}/api/auth/email-otp/request`, {
+        const res = await fetch(`${COPPERX_API}/api/auth/email-otp/request`, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${api_key}`,
+            Authorization: `Bearer ${COPPERX_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ email }),
@@ -216,11 +202,11 @@ bot.on("callback_query", async (query) => {
           const otp = otpMsg.text;
 
           const res = await fetch(
-            `${base_url}/api/auth/email-otp/authenticate`,
+            `${COPPERX_API}/api/auth/email-otp/authenticate`,
             {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${api_key}`,
+                Authorization: `Bearer ${COPPERX_API_KEY}`,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({ email, otp, sid }),
@@ -271,19 +257,13 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  if (!session) {
-    bot.sendMessage(
-      chatId,
-      "Oops!, Your session has expired, please login again.",
-      {
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [[{ text: "🔑 Login", callback_data: "login" }]],
-        },
-      }
-    );
-
-    return;
+  if (!sessions.get(chatId)) {
+    bot.sendMessage(chatId, "Your session expired. Please log in again.", {
+      reply_markup: {
+        inline_keyboard: [[{ text: "🔑 Login", callback_data: "login" }]],
+      },
+    });
+    return
   }
 
   const { accessToken } = session;
@@ -292,7 +272,7 @@ bot.on("callback_query", async (query) => {
     const walletId = data.split("_")[2];
 
     try {
-      const response = await fetch(`${base_url}/api/wallets/default`, {
+      const response = await fetch(`${COPPERX_API}/api/wallets/default`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
