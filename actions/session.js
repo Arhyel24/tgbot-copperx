@@ -12,30 +12,30 @@ const sessions = {
       await Session.deleteOne({ chatId });
       return null;
     } catch (error) {
-      console.error('Error getting session:', error);
+      console.error("Error getting session:", error);
       return null;
     }
   },
-  
+
   async set(chatId, userId, accessToken, data, expiresAt = {}) {
-    try {      
+    try {
       await Session.findOneAndUpdate(
         { chatId },
         { chatId, userId, accessToken, data, expiresAt },
         { upsert: true, new: true }
       );
     } catch (error) {
-      console.error('Error setting session:', error);
+      console.error("Error setting session:", error);
     }
   },
-  
+
   async delete(chatId) {
     try {
       await Session.deleteOne({ chatId });
     } catch (error) {
-      console.error('Error deleting session:', error);
+      console.error("Error deleting session:", error);
     }
-  }
+  },
 };
 
-module.exports = sessions
+module.exports = sessions;

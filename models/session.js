@@ -1,29 +1,29 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const sessionSchema = new mongoose.Schema({
   chatId: {
     type: Number,
     required: true,
-    unique: true
+    unique: true,
   },
   userId: {
     type: String,
-    required: true
+    required: true,
   },
   accessToken: {
     type: String,
-    required: true
+    required: true,
   },
   data: {
     type: Object,
-    default: {}
+    default: {},
   },
   expiresAt: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 });
 
-const Session = mongoose.model('Session', sessionSchema);
+const Session = mongoose.model("Session", sessionSchema);
 
 module.exports = Session;
