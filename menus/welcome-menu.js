@@ -1,4 +1,4 @@
-export const showWelcomeMenu = async (chatId, bot) => {
+const showWelcomeMenu = async (chatId, bot) => {
   await bot.sendMessage(
     chatId,
     `<b>🤖 Welcome to Copperx Bot!</b>\n\n
@@ -20,3 +20,5 @@ Manage your USDC transactions directly in Telegram. Check 💰 balances, send �
     }
   );
 };
+
+module.exports = { showWelcomeMenu };
