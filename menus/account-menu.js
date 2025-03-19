@@ -15,6 +15,16 @@ Manage your profile settings, check your verification ✅ status, or securely lo
             { text: "👤 View Profile", callback_data: "view_profile" },
             { text: "✅ KYC/KYB Status", callback_data: "check_kyc" },
           ],
+          [
+            { text: "✅ Manage Payees", callback_data: "payees" },
+            { text: "⭐ My Points", callback_data: "points" },
+          ],
+          [
+            {
+              text: "🏦 View Bank Accounts",
+              callback_data: "view_bank_account",
+            },
+          ],
           [{ text: "🚪 Log Out", callback_data: "logout" }],
           [{ text: "⬅️ Back to Main Menu", callback_data: "main_menu" }],
         ],

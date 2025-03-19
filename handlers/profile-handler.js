@@ -136,4 +136,128 @@ const handleViewProfile = async (chatId, bot, jwtToken) => {
   }
 };
 
-module.exports = { handleCheckKYC, handleViewProfile };
+const showUserPoints = async (chatId, bot, jwtToken, email) => {
+  try {
+    const response = await fetch(
+      "https://income-api.copperx.io/api/points/total",
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${jwtToken}` },
+      }
+    );
+
+    const result = await response.json();
+    if (!response.ok)
+      throw new Error(result.message || "Failed to fetch points.");
+
+    const message =
+      `📊 *Your Points Summary*\n\n` +
+      `👤 *Email:* ${email}\n` +
+      `⭐ *Total Points:* ${result.total}\n\n` +
+      `🔹 Earn more points by increasing your transactions, offramps, and deposits! 🚀`;
+
+    await bot.sendMessage(chatId, message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "⬅️ Back to Account", callback_data: "account" }],
+        ],
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching points:", error.message);
+    await bot.sendMessage(chatId, `❌ ${error.message}`, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "⬅️ Back to Account", callback_data: "account" }],
+        ],
+      },
+    });
+  }
+};
+
+const handleViewBankAccounts = async (chatId, bot, jwtToken) => {
+  bot.sendMessage(chatId, "⏳ Fetching your bank accounts... Please wait.");
+
+  try {
+    const response = await fetch("https://income-api.copperx.io/api/accounts", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(errorMessage || "Failed to fetch bank accounts.");
+    }
+
+    const { data: accounts } = await response.json();
+    const bankAccounts = accounts.filter(
+      (account) => account.type === "bank_account"
+    );
+
+    if (bankAccounts.length === 0) {
+      return bot.sendMessage(
+        chatId,
+        "🚫 No bank accounts found. You can add a new one below.",
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "➕ Add Bank Account",
+                  callback_data: "add_bank_account",
+                },
+              ],
+              [{ text: "🔙 Back to Accounts", callback_data: "account" }],
+            ],
+          },
+        }
+      );
+    }
+
+    let message = "🏦 *Your Linked Bank Accounts:*\n\n";
+    bankAccounts.forEach((account, index) => {
+      message += `🔹 *Account ${index + 1}*\n`;
+      message += `🏛 *Bank Name:* ${account.bankAccount.bankName}\n`;
+      message += `🏦 *Account Number:* \`${account.bankAccount.bankAccountNumber}\`\n`;
+      message += `📍 *Bank Address:* ${account.bankAccount.bankAddress}\n`;
+      message += `⭐ *Default Account:* ${
+        account.isDefault ? "Yes" : "No"
+      }\n\n`;
+    });
+
+    bot.sendMessage(chatId, message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🔙 Back to Accounts", callback_data: "account" }],
+        ],
+      },
+    });
+  } catch (error) {
+    bot.sendMessage(
+      chatId,
+      `❌ *Error fetching bank accounts.*\n\n⚠️ ${
+        error.message || "Please try again later."
+      }`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🔙 Back to Accounts", callback_data: "account" }],
+          ],
+        },
+      }
+    );
+    console.error("Bank Account Fetch Error:", error);
+  }
+};
+
+
+module.exports = {
+  handleCheckKYC,
+  handleViewProfile,
+  showUserPoints,
+  handleViewBankAccounts,
+};

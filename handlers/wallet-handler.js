@@ -61,6 +61,13 @@ const handleViewWallets = async (chatId, bot, jwtToken) => {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
+          [
+            {
+              text: "⭐ Set Default Wallet",
+              callback_data: "set_default_wallet",
+            },
+            { text: "💰 Check Balances", callback_data: "check_balances" },
+          ],
           [{ text: "🔙 Back to Wallets", callback_data: "wallet" }],
         ],
       },
@@ -247,7 +254,8 @@ const handleTransactionHistory = async (chatId, bot, jwtToken) => {
       );
     }
 
-    let message = "📊 *Recent Transactions:*\n\n";
+    let message =
+      "📊 *Recent Transactions:*\n\n These are your last 5 transactions, including status and details. If none appear, try sending or receiving funds.\n\n";
     data.data.forEach((txn, index) => {
       const amount =
         txn.currency.toUpperCase() === "USDC"
@@ -258,6 +266,7 @@ const handleTransactionHistory = async (chatId, bot, jwtToken) => {
         `📌 *Transaction ${index + 1}:*\n` +
         `💰 *Amount:* ${amount} ${txn.currency.toUpperCase()}\n` +
         `🔹 *Transaction Type:* ${txn.type.replace("_", " ").toUpperCase()}\n` +
+        `🔹 *Status:* ${txn.status}\n` +
         `📅 *Date:* ${new Date(txn.createdAt).toLocaleString()}\n\n`;
     });
 
@@ -265,7 +274,10 @@ const handleTransactionHistory = async (chatId, bot, jwtToken) => {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "🔙 Back to Wallets", callback_data: "wallet" }],
+          [
+            { text: "🔙 Back to Wallets", callback_data: "wallet" },
+            { text: "🔃 Refresh", callback_data: "transaction_history" },
+          ],
         ],
       },
     });
@@ -281,8 +293,6 @@ const handleTransactionHistory = async (chatId, bot, jwtToken) => {
   }
 };
 
-
-
 module.exports = {
   handleCheckBalances,
   handleSetDefaultWallet,
@@ -290,4 +300,3 @@ module.exports = {
   handleViewWallets,
   getNetworkName,
 };
-

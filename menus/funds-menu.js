@@ -21,7 +21,13 @@ Easily send USDC, withdraw funds to a 🏦 bank account, or review your 📜 rec
             { text: "🏦 Withdraw to Bank", callback_data: "transfer_bank" },
             { text: "📑 Bulk Transfers", callback_data: "transfer_bulk" },
           ],
-          [{ text: "📜 View Transactions", callback_data: "transfer_list" }],
+          [
+            {
+              text: "📅 Schedule Transfer",
+              callback_data: "transfer_schedules",
+            },
+            { text: "📜 View Transactions", callback_data: "transfer_list" },
+          ],
           [{ text: "⬅️ Back to Main Menu", callback_data: "main_menu" }],
         ],
       },

@@ -18,6 +18,8 @@ const { showAccountMenu } = require("./menus/account-menu");
 const {
   handleViewProfile,
   handleCheckKYC,
+  showUserPoints,
+  handleViewBankAccounts,
 } = require("./handlers/profile-handler");
 const { showFundsMenu } = require("./menus/funds-menu");
 const {
@@ -28,6 +30,25 @@ const {
   bulkTransfer,
 } = require("./handlers/funds-handler");
 const { helpOptions } = require("./handlers/others");
+const { showPayeesMenu } = require("./menus/payee-menu");
+const {
+  editPayee,
+  addPayee,
+  getPayees,
+  editPayees,
+  deletePayee,
+  confirmDeletePayee,
+  listPayeesForDeletion,
+} = require("./handlers/payees-handler");
+const showTransferSchedulesMenu = require("./menus/schedule-transfer-menu");
+const {
+  viewTransferSchedules,
+  deactivateTransferSchedule,
+  confirmDeactivateSchedule,
+  handleDeactivateSchedule,
+  selectPayeeForSchedule,
+  createTransferSchedule,
+} = require("./handlers/transfer-schedules-handler");
 require("dotenv").config();
 
 mongoose
@@ -52,6 +73,9 @@ requiredEnvVars.forEach((envVar) => {
 
 const { BOT_TOKEN, COPPERX_API, COPPERX_API_KEY, PUSHER_KEY, PUSHER_CLUSTER } =
   process.env;
+
+const app = express();
+app.use(express.json());
 
 const initializePusher = async (organizationId, chatId, token) => {
   const pusherClient = new Pusher(PUSHER_KEY, {
@@ -124,15 +148,17 @@ console.log("🔹 Bot Token Loaded:", BOT_TOKEN.slice(0, 10) + "");
 console.log("API endpoint:", COPPERX_API);
 console.log("API Key:", COPPERX_API_KEY.slice(0, 6), "");
 
-const bot = new TelegramBot(BOT_TOKEN, {
-  polling: {
-    interval: 300,
-    autoStart: true,
-    params: {
-      timeout: 10,
-    },
-  },
-});
+const bot = new TelegramBot(BOT_TOKEN);
+
+// {
+//   polling: {
+//     interval: 300,
+//     autoStart: true,
+//     params: {
+//       timeout: 10,
+//     },
+//   },
+// }
 
 bot.setMyCommands([
   { command: "start", description: "Start the bot" },
@@ -339,7 +365,7 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  const { accessToken, userId } = session;
+  const { accessToken, userId, data: userdata } = session;
 
   if (data.startsWith("set_wallet_")) {
     const walletId = data.split("_")[2];
@@ -383,7 +409,44 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
+  if (data.startsWith("EDIT_PAYEE_")) {
+    const payeeId = data.replace("EDIT_PAYEE_", "");
+    await editPayee(chatId, bot, accessToken, payeeId);
+    return;
+  }
+
+  if (data.startsWith("CREATE_SCHEDULE_")) {
+    const payeeId = data.replace("CREATE_SCHEDULE_", "");
+    await createTransferSchedule(chatId, bot, accessToken, payeeId);
+    return;
+  }
+
+  if (data.startsWith("CONFIRM_DEACTIVATE_SCHEDULE_")) {
+    const scheduleId = data.replace("CONFIRM_DEACTIVATE_SCHEDULE_", "");
+    await confirmDeactivateSchedule(chatId, bot, scheduleId);
+    return;
+  } else if (data.startsWith("DEACTIVATE_SCHEDULE_")) {
+    const scheduleId = data.replace("DEACTIVATE_SCHEDULE_", "");
+    await handleDeactivateSchedule(chatId, bot, accessToken, scheduleId);
+    return;
+  }
+
+  if (data.startsWith("DELETE_PAYEE_")) {
+    const payeeId = data.replace("DELETE_PAYEE_", "");
+    await confirmDeletePayee(chatId, bot, payeeId);
+    return;
+  } else if (data.startsWith("CONFIRM_DELETE_")) {
+    const payeeId = data.replace("CONFIRM_DELETE_", "");
+    await deletePayee(chatId, bot, accessToken, payeeId);
+    return;
+  }
+
   switch (data) {
+    // 🌟 Main Menus
+    case "main_menu":
+      await showMainMenu(chatId, bot);
+      break;
+
     case "wallet":
       await showWalletMenu(chatId, bot);
       break;
@@ -396,6 +459,7 @@ bot.on("callback_query", async (query) => {
       await showFundsMenu(chatId, bot);
       break;
 
+    // 💰 Wallet Actions
     case "view_wallets":
       await handleViewWallets(chatId, bot, accessToken);
       break;
@@ -408,20 +472,14 @@ bot.on("callback_query", async (query) => {
       await handleSetDefaultWallet(chatId, bot, accessToken);
       break;
 
+    // 🏦 Bank Account Actions
+    case "view_bank_account":
+      await handleViewBankAccounts(chatId, bot, accessToken);
+      break;
+
+    // 🔄 Transaction & Transfer Actions
     case "transaction_history":
       await handleTransactionHistory(chatId, bot, accessToken);
-      break;
-
-    case "main_menu":
-      await showMainMenu(chatId, bot);
-      break;
-
-    case "view_profile":
-      await handleViewProfile(chatId, bot, accessToken);
-      break;
-
-    case "check_kyc":
-      await handleCheckKYC(chatId, bot, accessToken);
       break;
 
     case "transfer_email":
@@ -444,9 +502,64 @@ bot.on("callback_query", async (query) => {
       await listTransfers(chatId, bot, accessToken);
       break;
 
+    // 📅 Transfer Schedules
+    case "transfer_schedules":
+      await showTransferSchedulesMenu(chatId, bot);
+      break;
+
+    case "view_schedules":
+      await viewTransferSchedules(chatId, bot, accessToken);
+      break;
+
+    case "create_schedule":
+      await selectPayeeForSchedule(chatId, bot, accessToken);
+      break;
+
+    case "deactivate_schedule":
+      await deactivateTransferSchedule(chatId, bot, accessToken);
+      break;
+
+    // 👥 Payees Management
+    case "payees":
+      await showPayeesMenu(chatId, bot, accessToken);
+      break;
+
+    case "add_payee":
+      await addPayee(chatId, bot, accessToken);
+      break;
+
+    case "view_payees":
+      await getPayees(chatId, bot, accessToken);
+      break;
+
+    case "edit_payee":
+      await editPayees(chatId, bot, accessToken);
+      break;
+
+    case "delete_payee":
+      await listPayeesForDeletion(chatId, bot, accessToken);
+      break;
+
+    // 👤 User Profile & Settings
+    case "view_profile":
+      await handleViewProfile(chatId, bot, accessToken);
+      break;
+
+    case "check_kyc":
+      await handleCheckKYC(chatId, bot, accessToken);
+      break;
+
+    case "points":
+      await showUserPoints(chatId, bot, accessToken, userdata.email);
+      break;
+
+    // ❓ Help & Logout
+    case "help":
+      helpOptions(chatId, bot);
+      break;
+
     case "logout":
       await sessions.delete(chatId);
-
       bot.sendMessage(
         chatId,
         "✅ You have been logged out successfully.\n\n" +
@@ -456,18 +569,33 @@ bot.on("callback_query", async (query) => {
       await newUserMenu(chatId, bot);
       break;
 
-    case "help":
-      helpOptions(chatId, bot);
-      break;
-
-    default:
-      await bot.sendMessage(
-        chatId,
-        "⚠️ Oops! It looks like you've entered an invalid option.\n\n" +
-          "📌 Please choose a valid option from the menu below or type /help for assistance."
-      );
-      await helpOptions(chatId, bot);
+    // ⚠️ Default Case (Invalid Option)
+    // case default:
+    //   await bot.sendMessage(
+    //     chatId,
+    //     "⚠️ Oops! It looks like you've entered an invalid option.\n\n" +
+    //       "📌 Please choose a valid option from the menu below or type /help for assistance."
+    //   );
+    //   await helpOptions(chatId, bot);
   }
+});
+
+const WEBHOOK_URL =
+  process.env.WEBHOOK_URL || "https://33f7-102-91-104-67.ngrok-free.app";
+
+bot
+  .setWebHook(`${WEBHOOK_URL}/bot${BOT_TOKEN}`)
+  .then(() => console.log(`✅ Webhook set at ${WEBHOOK_URL}/bot${BOT_TOKEN}`))
+  .catch((err) => console.error("❌ Webhook error:", err));
+
+app.post(`/bot${BOT_TOKEN}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Webhook server running on port ${PORT}`);
 });
 
 console.log("🚀 Bot is up and running! Listening for incoming messages...");

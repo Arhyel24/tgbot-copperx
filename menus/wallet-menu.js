@@ -18,7 +18,7 @@ const showWalletMenu = async (chatId, bot) => {
             { text: "👛 View Wallets", callback_data: "view_wallets" },
             { text: "💰 Check Balances", callback_data: "check_balances" },
           ],
-          [
+          [ 
             {
               text: "⭐ Set Default Wallet",
               callback_data: "set_default_wallet",
