@@ -11,6 +11,7 @@ const {
   handleCheckBalances,
   handleSetDefaultWallet,
   handleTransactionHistory,
+  getNetworkName,
 } = require("./handlers/wallet-handler");
 const { showWalletMenu } = require("./menus/wallet-menu");
 const { showAccountMenu } = require("./menus/account-menu");
@@ -21,10 +22,10 @@ const {
 const { showFundsMenu } = require("./menus/funds-menu");
 const {
   listTransfers,
-  requestEmailTransferData,
-  requestWalletTransferData,
-  requestBankWithdrawalData,
-  requestBulkTransferData,
+  emailTransfer,
+  walletTransfer,
+  bankWithdrawal,
+  bulkTransfer,
 } = require("./handlers/funds-handler");
 const { helpOptions } = require("./handlers/others");
 require("dotenv").config();
@@ -52,12 +53,7 @@ requiredEnvVars.forEach((envVar) => {
 const { BOT_TOKEN, COPPERX_API, COPPERX_API_KEY, PUSHER_KEY, PUSHER_CLUSTER } =
   process.env;
 
-
 const initializePusher = async (organizationId, chatId, token) => {
-  // console.log("Org ID:", organizationId);
-  // console.log("Chat ID:", chatId);
-  // console.log("Token:", token.slice(0, 6) + ".....");
-
   const pusherClient = new Pusher(PUSHER_KEY, {
     cluster: PUSHER_CLUSTER,
     authorizer: (channel) => ({
@@ -66,25 +62,25 @@ const initializePusher = async (organizationId, chatId, token) => {
         console.log("channel name:", channel.name);
 
         try {
-          const response = await fetch(`${COPPERX_API}/api/notifications/auth`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              socket_id: socketId,
-              channel_name: channel.name,
-            }),
-          });
+          const response = await fetch(
+            `${COPPERX_API}/api/notifications/auth`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                socket_id: socketId,
+                channel_name: channel.name,
+              }),
+            }
+          );
 
           const data = await response.json();
 
-          // console.log("Pusher data:", data);
-
           if (response.ok) {
             callback(null, data);
-            // console.log("✅ Pusher connected");
           } else {
             callback(new Error("Pusher authentication failed"), null);
           }
@@ -99,23 +95,25 @@ const initializePusher = async (organizationId, chatId, token) => {
   const channel = pusherClient.subscribe(`private-org-${organizationId}`);
 
   channel.bind("pusher:subscription_succeeded", () => {
-    // console.log("✅ Successfully subscribed to private channel");
-    bot.sendMessage(chatId, "✅ Successfully subscribed deposit notifications");
+    bot.sendMessage(
+      chatId,
+      "✅ Successfully subscribed to deposit notifications!\n\n" +
+        "📥 You will now receive real-time alerts whenever a new deposit is made to your account. " +
+        "Stay updated with your transactions effortlessly!"
+    );
   });
 
   channel.bind("pusher:subscription_error", (error) => {
     console.error("❌ Subscription error:", error);
   });
 
- channel.bind("deposit", (data) => {
-   bot.sendMessage(
-     chatId,
-     `💰 *Deposit Received*\n\nAmount: ${data.amount} ${data.currency}\nStatus: ${data.status}\nFrom: ${data.sourceCountry} → To: ${data.destinationCountry}`
-   );
- });
+  channel.bind("deposit", (data) => {
+    bot.sendMessage(
+      chatId,
+      `💰 *Deposit Received*\n\nAmount: ${data.amount} ${data.currency}\nStatus: ${data.status}\nFrom: ${data.sourceCountry} → To: ${data.destinationCountry}`
+    );
+  });
 
-
-  // Handle reconnection attempts
   pusherClient.connection.bind("disconnected", () => {
     console.warn("⚠️ Pusher disconnected. Attempting to reconnect...");
     initializePusher(organizationId, chatId, token);
@@ -136,6 +134,16 @@ const bot = new TelegramBot(BOT_TOKEN, {
   },
 });
 
+bot.setMyCommands([
+  { command: "start", description: "Start the bot" },
+  { command: "menu", description: "Show the main menu" },
+  { command: "wallet", description: "View wallet options" },
+  { command: "transfer", description: "Send or receive USDC" },
+  { command: "account", description: "Manage account settings" },
+  { command: "help", description: "Get help and support" },
+  { command: "logout", description: "Log out of your account" },
+]);
+
 bot.on("polling_error", (error) => {
   console.error("Polling error:", error.code, error.message);
 
@@ -145,19 +153,67 @@ bot.on("polling_error", (error) => {
   }
 });
 
-bot.onText(/\/start/, async (msg) => {
-  const session = await sessions.get(msg.chat.id);
-  session ? showMainMenu(msg.chat.id, bot) : newUserMenu(msg.chat.id, bot);
+const validCommands = {
+  start: async (chatId, bot) => {
+    const session = await sessions.get(chatId);
+
+    return session ? showMainMenu(chatId, bot) : newUserMenu(chatId, bot);
+  },
+  logout: async (chatId, bot) => {
+    await sessions.delete(chatId);
+    bot.sendMessage(chatId, "You've been logged out successfully.");
+    await newUserMenu(chatId, bot);
+  },
+  login: async (chatId, bot) => {
+    const session = await sessions.get(chatId);
+
+    if (session) {
+      bot.sendMessage(
+        chatId,
+        "✅ You are already logged in!\n\n" +
+          "🎉 Welcome back! You have an active session, so there's no need to log in again.\n" +
+          "Use the menu below to access available options."
+      );
+      return showMainMenu(chatId, bot);
+    }
+
+    return newUserMenu(chatId, bot);
+  },
+  menu: async (chatId, bot) => showMainMenu(chatId, bot),
+  wallet: async (chatId, bot) => showWalletMenu(chatId, bot),
+  transfer: async (chatId, bot) => showFundsMenu(chatId, bot),
+  account: async (chatId, bot) => showAccountMenu(chatId, bot),
+  help: async (chatId, bot) => helpOptions(chatId, bot),
+};
+
+bot.onText(/\/(\w+)/, async (msg, match) => {
+  const command = match[1].toLowerCase();
+  const chatId = msg.chat.id;
+
+  if (!validCommands[command]) {
+    return bot.sendMessage(
+      chatId,
+      "❌ Invalid command!\n\n" +
+        "⚠️ The command you entered is not recognized.\n" +
+        "📌 Use /menu to see the list of available commands and try again."
+    );
+  }
+
+  await validCommands[command](chatId, bot);
 });
 
-// Handle Login Button Click
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const data = query.data;
   const session = await sessions.get(chatId);
 
   if (data === "login") {
-    bot.sendMessage(chatId, "📧 Please enter your email to authenticate:");
+    bot.sendMessage(
+      chatId,
+      "📧 Please enter your email to authenticate.\n\n" +
+        "🔒 This is required to verify your identity and secure your account. " +
+        "Make sure to enter a valid email address to proceed."
+    );
 
     bot.once("message", async (emailMsg) => {
       const email = emailMsg.text;
@@ -189,11 +245,18 @@ bot.on("callback_query", async (query) => {
 
         bot.sendMessage(
           chatId,
-          `OTP successfully sent to: ${data.email}, Please enter it below.`,
+          `✅ OTP has been successfully sent to **${data.email}**.\n\n` +
+            "📩 Please check your inbox and enter the OTP below to continue.\n\n" +
+            "🔄 If you didn't receive it, you can request a new OTP using the button below.",
           {
             reply_markup: {
               inline_keyboard: [
-                [{ text: "Resend OTP 🔄", callback_data: `resend_${email}` }],
+                [
+                  {
+                    text: "Resend OTP 🔄",
+                    callback_data: `resend_${data.email}`,
+                  },
+                ],
               ],
             },
           }
@@ -249,9 +312,11 @@ bot.on("callback_query", async (query) => {
         console.error("Request failed:", error);
         bot.sendMessage(
           query.message.chat.id,
-          `Failed to send OTP: ${
-            error.message || "An unexpected error occurred."
-          }`
+          `❌ Failed to send OTP.\n\n` +
+            `⚠️ Error: ${
+              error.message || "An unexpected error occurred."
+            }\n\n` +
+            "🔄 Please try again or use the 'Resend OTP' option if the issue persists."
         );
       }
     });
@@ -259,15 +324,22 @@ bot.on("callback_query", async (query) => {
   }
 
   if (!sessions.get(chatId)) {
-    bot.sendMessage(chatId, "Your session expired. Please log in again.", {
-      reply_markup: {
-        inline_keyboard: [[{ text: "🔑 Login", callback_data: "login" }]],
-      },
-    });
-    return
+    bot.sendMessage(
+      chatId,
+      "⚠️ Your session has expired.\n\n" +
+        "🔒 For security reasons, you'll need to log in again to continue.\n" +
+        "Please click the button below to log in.",
+      {
+        reply_markup: {
+          inline_keyboard: [[{ text: "🔑 Login", callback_data: "login" }]],
+        },
+      }
+    );
+
+    return;
   }
 
-  const { accessToken } = session;
+  const { accessToken, userId } = session;
 
   if (data.startsWith("set_wallet_")) {
     const walletId = data.split("_")[2];
@@ -284,11 +356,29 @@ bot.on("callback_query", async (query) => {
 
       if (!response.ok) throw new Error("Failed to set default wallet");
 
-      bot.sendMessage(chatId, "✅ Wallet successfully set as default.");
-      await showWalletMenu(chatId, bot);
+      const { network } = await response.json();
+
+      bot.sendMessage(
+        chatId,
+        `✅ ${getNetworkName(network)} successfully set as default.`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "🔙 Back to Wallets", callback_data: "wallet" }],
+            ],
+          },
+        }
+      );
     } catch (error) {
-      bot.sendMessage(chatId, "❌ Failed to set default wallet.");
-      await showWalletMenu(chatId, bot);
+      bot.sendMessage(chatId, "❌ Failed to set default wallet.", {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🔙 Back to Wallets", callback_data: "wallet" }],
+          ],
+        },
+      });
     }
     return;
   }
@@ -308,12 +398,10 @@ bot.on("callback_query", async (query) => {
 
     case "view_wallets":
       await handleViewWallets(chatId, bot, accessToken);
-      await showWalletMenu(chatId, bot);
       break;
 
     case "check_balances":
       await handleCheckBalances(chatId, bot, accessToken);
-      await showWalletMenu(chatId, bot);
       break;
 
     case "set_default_wallet":
@@ -322,37 +410,34 @@ bot.on("callback_query", async (query) => {
 
     case "transaction_history":
       await handleTransactionHistory(chatId, bot, accessToken);
-      await showWalletMenu(chatId, bot);
       break;
 
     case "main_menu":
-      await showWelcomeMenu(chatId, bot, accessToken);
+      await showMainMenu(chatId, bot);
       break;
 
     case "view_profile":
       await handleViewProfile(chatId, bot, accessToken);
-      await showAccountMenu(chatId, bot);
       break;
 
     case "check_kyc":
       await handleCheckKYC(chatId, bot, accessToken);
-      await showAccountMenu(chatId, bot);
       break;
 
     case "transfer_email":
-      await requestEmailTransferData(chatId, bot, accessToken);
+      await emailTransfer(chatId, bot, accessToken, userId);
       break;
 
     case "transfer_wallet":
-      await requestWalletTransferData(chatId, bot, accessToken);
+      await walletTransfer(chatId, bot, accessToken);
       break;
 
     case "transfer_bank":
-      await requestBankWithdrawalData(chatId, bot, accessToken);
+      await bankWithdrawal(chatId, bot, accessToken);
       break;
 
     case "transfer_bulk":
-      await requestBulkTransferData(chatId, bot, accessToken);
+      await bulkTransfer(chatId, bot, accessToken);
       break;
 
     case "transfer_list":
@@ -362,10 +447,15 @@ bot.on("callback_query", async (query) => {
     case "logout":
       await sessions.delete(chatId);
 
-      bot.sendMessage(chatId, "You've been logged out successfully.");
+      bot.sendMessage(
+        chatId,
+        "✅ You have been logged out successfully.\n\n" +
+          "🔐 Your session has been securely closed. " +
+          "If you wish to log in again, use the menu below."
+      );
       await newUserMenu(chatId, bot);
       break;
-    
+
     case "help":
       helpOptions(chatId, bot);
       break;
@@ -373,69 +463,25 @@ bot.on("callback_query", async (query) => {
     default:
       await bot.sendMessage(
         chatId,
-        "⚠️ You seem lost!. Please choose a valid option."
+        "⚠️ Oops! It looks like you've entered an invalid option.\n\n" +
+          "📌 Please choose a valid option from the menu below or type /help for assistance."
       );
-      helpOptions(chatId, bot);
+      await helpOptions(chatId, bot);
   }
 });
 
-bot.onText(/\/(.+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const command = match[1]; // Extract the command after '/'
+console.log("🚀 Bot is up and running! Listening for incoming messages...");
 
-  // List of valid commands
-  const validCommands = [
-    "start",
-    "menu",
-    "help",
-    "logout",
-    "wallets",
-    "send",
-  ];
+// const app = express();
 
-  if (!validCommands.includes(command)) {
-    bot.sendMessage(
-      chatId,
-      `⚠️ Invalid command: *${command}*.\nType /help to see available commands.`,
-      {
-        parse_mode: "Markdown",
-      }
-    );
-  }
-});
+// app.get("/", (req, res) => {
+//   res.send("Telegram bot is running...");
+// });
 
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
 
-bot.onText(/\/logout/, async (msg) => {
-  const chatId = msg.chat.id;
-  await sessions.delete(chatId);
-
-  bot.sendMessage(chatId, "You've been logged out successfully.");
-  await newUserMenu(chatId, bot);
-});
-
-bot.onText(/\/menu/, async (msg) => {
-  const chatId = msg.chat.id;
-
-  bot.sendMessage(chatId, "Here is the menu.");
-  await showMainMenu(chatId, bot);
-});
-
-bot.onText(/\/help/, (msg) => {
-  helpOptions(msg.chat.id, bot)
-});
-
-console.log("Bot is running...");
-
-const app = express();
-
-app.get("/", (req, res) => {
-  res.send("Telegram bot is running...");
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
-process.once("SIGINT", () => bot.stopPolling());
-process.once("SIGTERM", () => bot.stopPolling());
+// process.once("SIGINT", () => bot.stopPolling());
+// process.once("SIGTERM", () => bot.stopPolling());

@@ -1,23 +1,25 @@
 const newUserMenu = async (chatId, bot) => {
   await bot.sendMessage(
     chatId,
-    `<b>👋 Welcome to the Copperx USDC Bot!</b>\n\n` +
-      `This bot allows you to securely manage your USDC transactions on Copperx directly from Telegram.\n\n` +
-      `<b>✨ Features:</b>\n` +
-      `- Check your wallet balance\n` +
-      `- Send USDC to an email or wallet address\n` +
-      `- Withdraw USDC to your bank account\n` +
-      `- View transaction history\n` +
-      `- Receive real-time deposit notifications\n\n` +
-      `<b>To get started, authenticate with Copperx below:</b>`,
+    `*👋 Welcome to Copperx USDC Bot!*\n\n` +
+      `Manage your *USDC transactions* easily from Telegram.\n` +
+      `Send, receive, and withdraw USDC securely—all in one place! 💼💰\n\n` +
+      `*🚀 Features:*\n\n` +
+      `🔹 *💰 Check Balance*\n\n` +
+      `🔹 *💸 Send USDC (Email/Wallet)*\n\n` +
+      `🔹 *🏦 Withdraw to Bank*\n\n` +
+      `🔹 *📜 View Transactions*\n\n` +
+      `🔹 *🔔 Real-Time Alerts*\n\n` +
+      `*🔑 Get started by logging in below:*`,
     {
-      parse_mode: "HTML",
+      parse_mode: "Markdown",
       reply_markup: {
-        inline_keyboard: [[{ text: "🔑 Login", callback_data: "login" }]],
+        inline_keyboard: [
+          [{ text: "🔑 Login to Copperx", callback_data: "login" }],
+        ],
       },
     }
   );
 };
 
 module.exports = { newUserMenu };
-

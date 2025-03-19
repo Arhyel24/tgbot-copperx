@@ -1,12 +1,14 @@
 const showAccountMenu = async (chatId, bot) => {
   await bot.sendMessage(
     chatId,
-    `<b>🔑 Account Management</b>\n\n
-Manage your profile, check ✅ verification status, or log out securely. \n\n
-Select an option below:
-`,
+    `*🔑 Account Management*\n\n
+Manage your profile settings, check your verification ✅ status, or securely log out of your account. \n\n
+🔹 *View Profile*: See your registered details and account information.\n
+🔹 *KYC/KYB Status*: Check the status of your identity verification process.\n
+🔹 *Log Out*: Safely exit your account to prevent unauthorized access.\n\n
+*⚡ Select an option below:*`,
     {
-      parse_mode: "HTML",
+      parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
           [

@@ -1,12 +1,17 @@
 const showWalletMenu = async (chatId, bot) => {
   await bot.sendMessage(
     chatId,
-    `<b>👛 Wallet Management</b>\n\n
-Manage your wallets, check 💰 balances, set ⭐ a default wallet, and track 📜 transaction history.\n\n
-<b>Choose an option below:</b>
-`,
+    `*👛 Wallet Management*\n\n` +
+      `Stay in control of your *USDC wallets*.\n` +
+      `Check balances, set a default wallet, or review transactions—all in one place! 💰📜\n\n` +
+      `*🔹 Options:*\n\n` +
+      `🔹 *👛 View Wallets*\n\n` +
+      `🔹 *💰 Check Balances*\n\n` +
+      `🔹 *⭐ Set Default Wallet*\n\n` +
+      `🔹 *📜 Transaction History*\n\n` +
+      `*Choose an option below:*`,
     {
-      parse_mode: "HTML",
+      parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
           [
@@ -31,4 +36,3 @@ Manage your wallets, check 💰 balances, set ⭐ a default wallet, and track �
 };
 
 module.exports = { showWalletMenu };
-

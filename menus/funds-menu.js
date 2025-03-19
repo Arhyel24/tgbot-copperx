@@ -1,12 +1,16 @@
 const showFundsMenu = async (chatId, bot) => {
   await bot.sendMessage(
     chatId,
-    `<b>💸 Funds Transfer</b>\n\n
-Send USDC, withdraw to 🏦 a bank, or check 📜 recent transactions.\n\n
-Select an option below:
-`,
+    `*💸 Funds Transfer*\n\n
+Easily send USDC, withdraw funds to a 🏦 bank account, or review your 📜 recent transactions.\n\n
+🔹 *Send via Email*: Transfer USDC to a recipient's email address.\n\n
+🔹 *Send to Wallet*: Transfer USDC directly to a blockchain wallet.\n\n
+🔹 *Withdraw to Bank*: Move funds from your wallet to a linked bank account.\n\n
+🔹 *Bulk Transfers*: Send payments to multiple recipients at once.\n\n
+🔹 *View Transactions*: Check your recent fund transfers and withdrawals.\n\n
+*⚡ Select an option below:*`,
     {
-      parse_mode: "HTML",
+      parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
           [

@@ -1,12 +1,15 @@
 const showMainMenu = async (chatId, bot) => {
   await bot.sendMessage(
     chatId,
-    `<b>⚙️ Manage your Copperx Account</b>\n\n
-Manage your USDC transactions directly in Telegram. Check 💰 balances, send 💸 funds, withdraw to 🏦 a bank, and receive 🔔 real-time deposit notifications.\n\n
-<b>Select an option below to get started:</b>
-`,
+    `*⚙️ Manage Your Copperx Account*\n\n` +
+      `Easily handle your *USDC transactions* right within Telegram.\n\n` +
+      `🔹 *Check Balances* – View your available USDC funds.\n\n` +
+      `🔹 *Send Funds* – Transfer USDC securely.\n\n` +
+      `🔹 *Withdraw to Bank* – Move funds to your 🏦 linked bank account.\n\n` +
+      `🔹 *Receive Notifications* – Get 🔔 real-time deposit alerts.\n\n` +
+      `*⚡ Select an option below to get started:*`,
     {
-      parse_mode: "HTML",
+      parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
           [

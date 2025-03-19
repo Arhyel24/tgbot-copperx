@@ -8,34 +8,80 @@ const handleCheckKYC = async (chatId, bot, jwtToken) => {
       },
     });
 
-    if (!response.ok) throw new Error("Failed to fetch KYC status");
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(errorMessage || "Failed to fetch KYC status.");
+    }
 
     const kycData = await response.json();
 
     if (!kycData.data.length) {
       return bot.sendMessage(
         chatId,
-        "🚫 No KYC record found.\n\n🔗 Please complete your KYC verification at <a href='https://payout.copperx.io/app'>Copperx Payout</a>.",
-        { parse_mode: "HTML" }
+        "🚫 No KYC record found.\n\n" +
+          "🔍 It looks like you haven’t completed your KYC verification yet.\n" +
+          "🔗 <a href='https://payout.copperx.io/app'>Click here to complete your KYC</a>.",
+        {
+          parse_mode: "HTML",
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "🔙 Back to Profile", callback_data: "account" }],
+            ],
+          },
+        }
       );
     }
 
-    const kyc = kycData.data[0];
-    const status = kyc.status.toUpperCase();
+    const kycList = kycData.data
+      .map((kyc) => {
+        const status = kyc.status.toUpperCase();
+        return (
+          `🛂 <b>KYC Status:</b>\n\n` +
+          `📍 <b>Status:</b> ${status}\n` +
+          `👥 <b>Type:</b> ${kyc.type}\n` +
+          `🌍 <b>Country:</b> ${kyc.country.toUpperCase()}\n\n`
+        );
+      })
+      .join("\n");
 
-    let message =
-      `🛂 <b>KYC Status:</b>\n\n` +
-      `📍 <b>Status:</b> ${status}\n` +
-      `👥 <b>Type:</b> ${kyc.type}\n` +
-      `🌍 <b>Country:</b> ${kyc.country}\n\n`;
+    const isApproved = kycData.data.every(
+      (kyc) => kyc.status.toUpperCase() === "APPROVED"
+    );
 
-    if (status !== "APPROVED") {
-      message += `🚨 Your KYC is not approved yet. Please complete verification at:\n🔗 <a href='https://payout.copperx.io/app'>Copperx Payout</a>`;
+    let message = kycList;
+    if (!isApproved) {
+      message +=
+        "🚨 <b>Your KYC is not approved yet.</b>\n" +
+        "⚠️ Please complete your verification as soon as possible to avoid restrictions.\n" +
+        "🔗 <a href='https://payout.copperx.io/app'>Click here to verify your KYC</a>.";
+    } else {
+      message +=
+        "✅ <b>Your KYC is fully approved!</b>\n🎉 You can now use all features without restrictions.";
     }
 
-    bot.sendMessage(chatId, message, { parse_mode: "HTML" });
+    bot.sendMessage(chatId, message, {
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🔙 Back to Profile", callback_data: "account" }],
+        ],
+      },
+    });
   } catch (error) {
-    bot.sendMessage(chatId, "❌ Error fetching KYC status.");
+    bot.sendMessage(
+      chatId,
+      `❌ Error fetching KYC status.\n\n⚠️ ${
+        error.message || "Please try again later."
+      }`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🔙 Back to Profile", callback_data: "account" }],
+          ],
+        },
+      }
+    );
+    console.error("KYC Fetch Error:", error);
   }
 };
 
@@ -49,20 +95,44 @@ const handleViewProfile = async (chatId, bot, jwtToken) => {
       },
     });
 
-    if (!response.ok) throw new Error("Failed to fetch profile");
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(errorMessage || "Failed to fetch profile data.");
+    }
 
     const user = await response.json();
-    let message =
-      `👤 *Your Profile:*\n\n` +
-      `📧 Email: ${user.email}\n\n` +
-      `🔹 Status: ${user.status}\n\n` +
-      `🎭 Role: ${user.role}\n\n` +
-      `🏦 Wallet Address: \`${user.walletAddress}\`\n\n` +
-      `🔗 Relayer Address: \`${user.relayerAddress}\``;
 
-    bot.sendMessage(chatId, message, { parse_mode: "Markdown" });
+    let message =
+      `👤 *Your Profile Details:*\n\n` +
+      `📧 *Email:* ${user.email}\n` +
+      `🔹 *Status:* ${user.status.toUpperCase()}\n` +
+      `🎭 *Role:* ${user.role.toUpperCase()}\n\n` +
+      `💰 *Wallet Address:*\n\`${user.walletAddress || "Not linked"}\`\n\n` +
+      `🔗 *Relayer Address:*\n\`${user.relayerAddress || "Not available"}\``;
+
+    bot.sendMessage(chatId, message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🔙 Back to Profile", callback_data: "account" }],
+        ],
+      },
+    });
   } catch (error) {
-    bot.sendMessage(chatId, "❌ Error fetching profile data.");
+    bot.sendMessage(
+      chatId,
+      `❌ Error fetching profile data.\n\n⚠️ ${
+        error.message || "Please try again later."
+      }`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🔙 Back to Profile", callback_data: "account" }],
+          ],
+        },
+      }
+    );
+    console.error("Profile Fetch Error:", error);
   }
 };
 
