@@ -1,4 +1,4 @@
-export const showFundsMenu = async (chatId, bot) => {
+const showFundsMenu = async (chatId, bot) => {
   await bot.sendMessage(
     chatId,
     `<b>💸 Funds Transfer</b>\n\n
@@ -24,3 +24,5 @@ Select an option below:
     }
   );
 };
+
+module.exports = { showFundsMenu };

@@ -1,4 +1,4 @@
-export const newUserMenu = async (chatId, bot) => {
+const newUserMenu = async (chatId, bot) => {
   await bot.sendMessage(
     chatId,
     `<b>👋 Welcome to the Copperx USDC Bot!</b>\n\n` +
@@ -18,3 +18,6 @@ export const newUserMenu = async (chatId, bot) => {
     }
   );
 };
+
+module.exports = { newUserMenu };
+

@@ -1,4 +1,4 @@
-export const helpOptions = (chatId, bot) => {
+const helpOptions = (chatId, bot) => {
     bot.sendMessage(
      chatId,
       `📌 Copperx Bot Help Guide:\n` +
@@ -16,3 +16,5 @@ export const helpOptions = (chatId, bot) => {
         `Support Chat - https://t.me/copperxcommunity/2183`
     );
 }
+
+module.exports = { helpOptions };

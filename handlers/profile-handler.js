@@ -1,4 +1,4 @@
-export const handleCheckKYC = async (chatId, bot, jwtToken) => {
+const handleCheckKYC = async (chatId, bot, jwtToken) => {
   try {
     const response = await fetch("https://income-api.copperx.io/api/kycs", {
       method: "GET",
@@ -39,7 +39,7 @@ export const handleCheckKYC = async (chatId, bot, jwtToken) => {
   }
 };
 
-export const handleViewProfile = async (chatId, bot, jwtToken) => {
+const handleViewProfile = async (chatId, bot, jwtToken) => {
   try {
     const response = await fetch("https://income-api.copperx.io/api/auth/me", {
       method: "GET",
@@ -65,3 +65,5 @@ export const handleViewProfile = async (chatId, bot, jwtToken) => {
     bot.sendMessage(chatId, "❌ Error fetching profile data.");
   }
 };
+
+module.exports = { handleCheckKYC, handleViewProfile };

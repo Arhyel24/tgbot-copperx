@@ -17,7 +17,7 @@ function getNetworkName(networkId) {
   }
 }
 
-export const handleViewWallets = async (chatId, bot, jwtToken) => {
+const handleViewWallets = async (chatId, bot, jwtToken) => {
   bot.sendMessage(chatId, "⏳ Fetching your wallets...");
   try {
     const response = await fetch(`${base_url}/api/wallets`, {
@@ -44,7 +44,7 @@ export const handleViewWallets = async (chatId, bot, jwtToken) => {
   }
 };
 
-export const handleCheckBalances = async (chatId, bot, jwtToken) => {
+const handleCheckBalances = async (chatId, bot, jwtToken) => {
   bot.sendMessage(chatId, "⏳ Checking your wallet balances...");
   try {
     const response = await fetch(`${base_url}/api/wallets/balances`, {
@@ -73,7 +73,7 @@ export const handleCheckBalances = async (chatId, bot, jwtToken) => {
   }
 };
 
-export const handleSetDefaultWallet = async (chatId, bot, jwtToken) => {
+const handleSetDefaultWallet = async (chatId, bot, jwtToken) => {
   bot.sendMessage(chatId, "⏳ Fetching available wallets...");
   try {
     const response = await fetch(`${base_url}/api/wallets`, {
@@ -104,7 +104,7 @@ export const handleSetDefaultWallet = async (chatId, bot, jwtToken) => {
   }
 };
 
-export const handleTransactionHistory = async (chatId, bot, jwtToken) => {
+const handleTransactionHistory = async (chatId, bot, jwtToken) => {
   bot.sendMessage(chatId, "⏳ Fetching your transaction history...");
 
   try {
@@ -137,3 +137,6 @@ export const handleTransactionHistory = async (chatId, bot, jwtToken) => {
     bot.sendMessage(chatId, "❌ Error fetching transactions.");
   }
 };
+
+module.exports = { handleCheckBalances, handleSetDefaultWallet, handleTransactionHistory, handleViewWallets };
+

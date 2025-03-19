@@ -1,4 +1,4 @@
-export const showWalletMenu = async (chatId, bot) => {
+const showWalletMenu = async (chatId, bot) => {
   await bot.sendMessage(
     chatId,
     `<b>👛 Wallet Management</b>\n\n
@@ -29,3 +29,6 @@ Manage your wallets, check 💰 balances, set ⭐ a default wallet, and track �
     }
   );
 };
+
+module.exports = { showWalletMenu };
+

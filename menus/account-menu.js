@@ -1,4 +1,4 @@
-export const showAccountMenu = async (chatId, bot) => {
+const showAccountMenu = async (chatId, bot) => {
   await bot.sendMessage(
     chatId,
     `<b>🔑 Account Management</b>\n\n
@@ -20,3 +20,5 @@ Select an option below:
     }
   );
 };
+
+module.exports = { showAccountMenu };
