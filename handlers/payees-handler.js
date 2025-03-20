@@ -69,7 +69,6 @@ const getPayees = async (chatId, bot, jwtToken) => {
       },
     });
   } catch (error) {
-    console.error("Error in getPayees:", error.message);
     await bot.sendMessage(chatId, `❌ *${error.message}*`, {
       parse_mode: "Markdown",
       reply_markup: {
@@ -118,8 +117,6 @@ const addPayee = async (chatId, bot, jwtToken) => {
 
     const data = await response.json();
 
-    console.log("data:", data);
-
     if (!response.ok) {
       throw new Error(data.message || "Failed to add payee");
     }
@@ -137,8 +134,6 @@ const addPayee = async (chatId, bot, jwtToken) => {
       }
     );
   } catch (error) {
-    console.error("Error in addPayee:", error);
-
     await bot.sendMessage(chatId, `❌ *${error.message}*`, {
       parse_mode: "Markdown",
       reply_markup: {
@@ -189,7 +184,6 @@ const editPayees = async (chatId, bot, jwtToken) => {
       },
     });
   } catch (error) {
-    console.error("Error in listPayeesForEditing:", error.message);
     await bot.sendMessage(chatId, `❌ *${error.message}*`, {
       parse_mode: "Markdown",
       reply_markup: {
@@ -243,7 +237,6 @@ const editPayee = async (chatId, bot, jwtToken, payeeId) => {
       }
     );
   } catch (error) {
-    console.error("Error in editPayee:", error.message);
     await bot.sendMessage(chatId, `❌ *${error.message}*`, {
       parse_mode: "Markdown",
       reply_markup: {
@@ -286,7 +279,6 @@ const listPayeesForDeletion = async (chatId, bot, jwtToken) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching payees:", error.message);
     await bot.sendMessage(chatId, `❌ ${error.message}`, {
       reply_markup: {
         inline_keyboard: [
@@ -339,7 +331,6 @@ const deletePayee = async (chatId, bot, jwtToken, payeeId) => {
       },
     });
   } catch (error) {
-    console.error("Error deleting payee:", error.message);
     await bot.sendMessage(chatId, `❌ ${error.message}`, {
       parse_mode: "Markdown",
       reply_markup: {

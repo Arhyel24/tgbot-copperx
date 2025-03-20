@@ -1,7 +1,5 @@
 const base_url = "https://income-api.copperx.io";
 
-console.log(base_url);
-
 function getNetworkName(networkId) {
   switch (networkId) {
     case "137":
@@ -86,7 +84,6 @@ const handleViewWallets = async (chatId, bot, jwtToken) => {
         },
       }
     );
-    console.error("Wallet Fetch Error:", error);
   }
 };
 
@@ -153,7 +150,6 @@ const handleCheckBalances = async (chatId, bot, jwtToken) => {
         },
       }
     );
-    console.error("Balance Fetch Error:", error);
   }
 };
 
@@ -217,7 +213,6 @@ const handleSetDefaultWallet = async (chatId, bot, jwtToken) => {
         },
       }
     );
-    console.error("Set Default Wallet Error:", error);
   }
 };
 
@@ -289,7 +284,6 @@ const handleTransactionHistory = async (chatId, bot, jwtToken) => {
         ],
       },
     });
-    console.error("Transaction History Error:", error);
   }
 };
 

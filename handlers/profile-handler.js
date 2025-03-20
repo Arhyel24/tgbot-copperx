@@ -81,7 +81,6 @@ const handleCheckKYC = async (chatId, bot, jwtToken) => {
         },
       }
     );
-    console.error("KYC Fetch Error:", error);
   }
 };
 
@@ -132,7 +131,6 @@ const handleViewProfile = async (chatId, bot, jwtToken) => {
         },
       }
     );
-    console.error("Profile Fetch Error:", error);
   }
 };
 
@@ -165,7 +163,6 @@ const showUserPoints = async (chatId, bot, jwtToken, email) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching points:", error.message);
     await bot.sendMessage(chatId, `❌ ${error.message}`, {
       parse_mode: "Markdown",
       reply_markup: {
@@ -250,7 +247,6 @@ const handleViewBankAccounts = async (chatId, bot, jwtToken) => {
         },
       }
     );
-    console.error("Bank Account Fetch Error:", error);
   }
 };
 

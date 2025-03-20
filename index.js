@@ -264,7 +264,6 @@ bot.on("callback_query", async (query) => {
 
       await authenticateWithOTP(chatId, email, otpData.sid);
     } catch (error) {
-      console.error("Login flow error:", error);
       await bot.sendMessage(
         chatId,
         "❌ Authentication process failed. Please try again later."
@@ -281,7 +280,6 @@ bot.on("callback_query", async (query) => {
 
       await authenticateWithOTP(chatId, email, otpData.sid);
     } catch (error) {
-      console.error("Resend OTP error:", error);
       await bot.sendMessage(
         chatId,
         `❌ Failed to resend OTP: ${
@@ -371,7 +369,7 @@ bot.on("callback_query", async (query) => {
             const errorData = await res.json();
             errorMessage = errorData.message || errorMessage;
           } catch (jsonError) {
-            console.error("Error parsing error response:", jsonError);
+            throw new Error("Error parsing error response:", jsonError);
           }
 
           await bot.sendMessage(chatId, `❌ ${errorMessage}`, {
@@ -404,8 +402,6 @@ bot.on("callback_query", async (query) => {
 
         authenticated = true;
       } catch (error) {
-        console.error("OTP authentication failed:", error);
-
         await bot.sendMessage(
           chatId,
           `❌ Authentication error: ${
@@ -423,7 +419,7 @@ bot.on("callback_query", async (query) => {
         const errorData = await response.json();
         errorMessage = errorData.message || errorMessage;
       } catch (jsonError) {
-        console.error("Error parsing error response:", jsonError);
+        throw new Error("Error parsing error response:", jsonError);
       }
       throw new Error(errorMessage);
     }
@@ -669,7 +665,7 @@ const WEBHOOK_URL =
 
 bot
   .setWebHook(`${WEBHOOK_URL}/bot${BOT_TOKEN}`)
-  .then(() => console.log(`✅ Webhook set at ${WEBHOOK_URL}/bot${BOT_TOKEN}`))
+  .then(() => console.log(`✅ Webhook set at ${WEBHOOK_URL}/bot${BOT_TOKEN.slice(0,6)}...`))
   .catch((err) => console.error("❌ Webhook error:", err.message));
 
 app.post(`/bot${BOT_TOKEN}`, (req, res) => {

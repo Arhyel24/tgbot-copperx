@@ -84,7 +84,6 @@ const emailTransfer = async (chatId, bot, accessToken, userId) => {
       `❌ *Transfer Failed:*\n${error.message}`,
       getBackToMenuOptions()
     );
-    console.error("Transfer Error:", error);
   }
 };
 
@@ -157,7 +156,6 @@ const walletTransfer = async (chatId, bot, accessToken) => {
       `❌ *Wallet Transfer Failed:*\n${error.message}`,
       getBackToMenuOptions()
     );
-    console.error("Wallet Transfer Error:", error);
   }
 };
 
@@ -303,8 +301,7 @@ const bankWithdrawal = async (chatId, bot, accessToken) => {
       chatId,
       `❌ *Bank Withdrawal Failed:*\n${error.message}`,
       getBackToMenuOptions()
-    );
-    console.error("Bank Withdrawal Error:", error);
+    )
   }
 };
 
@@ -408,8 +405,6 @@ const bulkTransfer = async (chatId, bot, accessToken, userId) => {
       );
     }
 
-    console.log("Payload:", bulkData);
-
     const response = await fetch(`${base_url}/send-batch`, {
       method: "POST",
       headers: {
@@ -420,8 +415,6 @@ const bulkTransfer = async (chatId, bot, accessToken, userId) => {
     });
 
     const data = await response.json();
-
-    console.log("Data:", data);
 
     if (!response.ok) throw new Error(data.error || "Bulk Transfer failed");
 
@@ -436,7 +429,6 @@ const bulkTransfer = async (chatId, bot, accessToken, userId) => {
       `❌ *Bulk Transfer Failed:*\n${error.message}`,
       getBackToMenuOptions()
     );
-    console.error("Bulk Transfer Error:", error);
   }
 };
 
@@ -480,7 +472,6 @@ const fetchQuote = async (accessToken, quoteRequest) => {
 
     return await response.json();
   } catch (error) {
-    console.error("Quote Fetch Error:", error);
     return null;
   }
 };
