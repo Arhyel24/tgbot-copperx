@@ -6,7 +6,6 @@ const helpOptions = (chatId, bot) => {
     `/login - Authenticate with Copperx\n` +
     `/wallet - View & manage wallets\n` +
     `/account - Check your USDC balance\n` +
-    `/kyc - Check your KYC status\n\n` +
     `💸 *Send & Withdraw*\n` +
     `/transfer - Transfer USDC to an email or wallet\n\n` +
     `🔐 *Account & Security*\n` +
