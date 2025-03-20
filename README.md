@@ -1,5 +1,3 @@
-Here’s the complete documentation formatted as a `README.md` file. You can copy and paste this into your repository:
-
 # **Telegram Bot - README**
 
 ## **Overview**
@@ -72,8 +70,8 @@ This approach ensures that **sensitive user data remains encrypted and protected
 ### **Steps**
 1. **Clone the Repository**:
    ```bash
-   git clone <repository-url>
-   cd <repository-folder>
+   git clone https://github.com/Arhyel24/tgbot-copperx
+   cd tgbot-copperx
    ```
 
 2. **Install Dependencies**:
