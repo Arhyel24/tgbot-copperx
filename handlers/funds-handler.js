@@ -11,7 +11,7 @@ const purposeOptions = [
   "home_improvement",
   "reimbursement",
 ];
-const minAmount = BigInt(100_000_000);
+const minAmount = BigInt(1_000_000);
 const maxAmount = BigInt(5_000_000_000_000);
 
 const emailTransfer = async (chatId, bot, accessToken, userId) => {
@@ -505,7 +505,7 @@ const captureValidAmount = async (bot, chatId, minAmount, maxAmount) => {
       continue;
     }
 
-    let amountInUSDC = BigInt(Math.round(amount * 10 ** 6));
+    let amountInUSDC = BigInt(Math.round(amount * 10 ** 8));
 
     if (amountInUSDC < minAmount || amountInUSDC > maxAmount) {
       await bot.sendMessage(

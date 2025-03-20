@@ -41,8 +41,6 @@ const initiateDeposit = async (chatId, bot, accessToken) => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Transfer failed");
 
-    console.log("Data:", data);
-
     await bot.deleteMessage(chatId, processingPrompt.message_id);
 
     await bot.sendMessage(
@@ -60,7 +58,7 @@ const initiateDeposit = async (chatId, bot, accessToken) => {
         `💵 **You'll receive**: ${(
           data.transactions[0].toAmount / 100_000_000
         ).toLocaleString()} ${data.feeCurrency}\n\n` +
-        `🔗 **Complete your deposit**: ${data.transactions[0].depositUrl}`,
+        `🔗 **Complete your deposit**: [Complete](${data.transactions[0].depositUrl})`,
       {
         parse_mode: "Markdown",
         reply_markup: {
@@ -116,20 +114,20 @@ const captureValidSource = async (bot, chatId) => {
 };
 
 const captureValidAmount = async (bot, chatId) => {
-  const minAmount = BigInt(100 * 10 ** 6),
+  const minAmount = BigInt(1 * 10 ** 6),
     maxAmount = BigInt(5000000 * 10 ** 6);
 
   while (true) {
     const amountInput = await promptUser(
       bot,
       chatId,
-      "💰 Enter amount (USDC) - Min: 100, Max: 5,000,000:\n_(Type 'cancel' to return to the transfer menu)_"
+      "💰 Enter amount (USDC) - Min: 1, Max: 5,000,000:\n_(Type 'cancel' to return to the transfer menu)_"
     );
 
     if (amountInput.toLowerCase() === "cancel")
       return cancelTransfer(chatId, bot);
 
-    const amount = BigInt(Math.round(parseFloat(amountInput) * 10 ** 6));
+    const amount = BigInt(Math.round(parseFloat(amountInput) * 10 ** 8));
 
     if (amount >= minAmount && amount <= maxAmount) return amount.toString();
     await bot.sendMessage(
