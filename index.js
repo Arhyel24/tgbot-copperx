@@ -581,7 +581,7 @@ bot.on("callback_query", async (query) => {
 });
 
 const WEBHOOK_URL =
-  process.env.WEBHOOK_URL || "https://33f7-102-91-104-67.ngrok-free.app";
+  process.env.WEBHOOK_URL || "https://3d69-102-91-104-67.ngrok-free.app";
 
 bot
   .setWebHook(`${WEBHOOK_URL}/bot${BOT_TOKEN}`)

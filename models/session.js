@@ -14,6 +14,10 @@ const sessionSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  iv: {
+    type: String,
+    required: true,
+  },
   data: {
     type: Object,
     default: {},
@@ -23,6 +27,7 @@ const sessionSchema = new mongoose.Schema({
     required: true,
   },
 });
+
 
 const Session = mongoose.model("Session", sessionSchema);
 
