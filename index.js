@@ -275,6 +275,7 @@ bot.on("callback_query", async (query) => {
             "📩 Please check your inbox and enter the OTP below to continue.\n\n" +
             "🔄 If you didn't receive it, you can request a new OTP using the button below.",
           {
+            parse_mode: "Markdown",
             reply_markup: {
               inline_keyboard: [
                 [
