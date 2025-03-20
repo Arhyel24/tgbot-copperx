@@ -1,4 +1,4 @@
-# **Telegram Bot - README**
+# **Telegram Bot - With COPPERX Payout**
 
 ## **Overview**
 This is a Telegram bot built using Node.js and the `node-telegram-bot-api` library. The bot integrates with a backend API (CopperX) to provide functionalities such as wallet management, fund transfers, transaction history, payee management, and real-time deposit notifications via Pusher. It also uses MongoDB for session management and Express for handling webhooks.
