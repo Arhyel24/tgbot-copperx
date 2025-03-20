@@ -16,7 +16,10 @@ const showMainMenu = async (chatId, bot) => {
             { text: "👤 Account", callback_data: "account" },
             { text: "💼 Wallet", callback_data: "wallet" },
           ],
-          [{ text: "💸 Funds Transfer", callback_data: "funds_transfer" }],
+          [
+            { text: "🏧 Deposit funds", callback_data: "deposit" },
+            { text: "💸 Funds Transfer", callback_data: "funds_transfer" },
+          ],
           [{ text: "❓ Help & Support", callback_data: "help" }],
         ],
       },

@@ -490,7 +490,7 @@ const captureValidAmount = async (bot, chatId, minAmount, maxAmount) => {
     let amountInput = await promptUser(
       bot,
       chatId,
-      "💰 *Enter the transfer amount (USDC) - Min: 100, Max: 5,000,000:*\n_(Type 'cancel' to return to the transfer menu)_"
+      "💰 *Enter the transfer amount (USDC) - Min: 1, Max: 5,000,000:*\n_(Type 'cancel' to return to the transfer menu)_"
     );
     if (amountInput.toLowerCase() === "cancel")
       return cancelTransfer(chatId, bot);

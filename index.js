@@ -29,7 +29,7 @@ const {
   bankWithdrawal,
   bulkTransfer,
 } = require("./handlers/funds-handler");
-const { helpOptions } = require("./handlers/others");
+const { helpOptions, initiateDeposit } = require("./handlers/others");
 const { showPayeesMenu } = require("./menus/payee-menu");
 const {
   editPayee,
@@ -534,6 +534,10 @@ bot.on("callback_query", async (query) => {
     case "account":
       await showAccountMenu(chatId, bot);
       break;
+    
+    case "deposit":
+      await initiateDeposit(chatId, bot, accessToken);
+      break;
 
     case "funds_transfer":
       await showFundsMenu(chatId, bot);
@@ -661,7 +665,7 @@ bot.on("callback_query", async (query) => {
 });
 
 const WEBHOOK_URL =
-  process.env.WEBHOOK_URL || "https://fc08-102-91-77-166.ngrok-free.app";
+  process.env.WEBHOOK_URL || "https://4320-102-91-77-166.ngrok-free.app";
 
 bot
   .setWebHook(`${WEBHOOK_URL}/bot${BOT_TOKEN}`)

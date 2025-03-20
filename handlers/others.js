@@ -16,4 +16,167 @@ const helpOptions = (chatId, bot) => {
   bot.sendMessage(chatId, helpMessage, { parse_mode: "Markdown" });
 };
 
-module.exports = { helpOptions };
+const initiateDeposit = async (chatId, bot, accessToken) => {
+  try {
+    const amount = await captureValidAmount(bot, chatId);
+    const sourceOfFunds = await captureValidSource(bot, chatId);
+
+    const processingPrompt = await bot.sendMessage(
+      chatId,
+      "⏳ Processing your deposit request..."
+    );
+
+    const res = await fetch(
+      "https://income-api.copperx.io/api/transfers/deposit",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ amount, sourceOfFunds, depositChainId: 8453 }),
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Transfer failed");
+
+    console.log("Data:", data);
+
+    await bot.deleteMessage(chatId, processingPrompt.message_id);
+
+    await bot.sendMessage(
+      chatId,
+      `✅ Deposit initiated successfully!\n\n` +
+        `📝 **Details**:\n` +
+        `- **Amount**: ${(
+          data.amountSubtotal / 100_000_000
+        ).toLocaleString()} ${data.feeCurrency}\n` +
+        `- **Status**: ${data.status}\n` +
+        `- **ID**: ${data.id}\n\n` +
+        `💰 **You'll pay**: ${(
+          data.transactions[0].fromAmount / 100_000_000
+        ).toLocaleString()} ${data.feeCurrency}\n` +
+        `💵 **You'll receive**: ${(
+          data.transactions[0].toAmount / 100_000_000
+        ).toLocaleString()} ${data.feeCurrency}\n\n` +
+        `🔗 **Complete your deposit**: ${data.transactions[0].depositUrl}`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "🌐 Proceed to Deposit",
+                url: data.transactions[0].depositUrl,
+              },
+            ],
+            [{ text: "🔙 Back to main menu", callback_data: "main_menu" }],
+          ],
+        },
+      }
+    );
+  } catch (error) {
+    await bot.sendMessage(
+      chatId,
+      `❌ Failed to process deposit: ${error.message}`,
+      getBackToMenuOptions()
+    );
+  }
+};
+
+const captureValidSource = async (bot, chatId) => {
+  const validSources = [
+    "salary",
+    "savings",
+    "lottery",
+    "investment",
+    "loan",
+    "business_income",
+    "others",
+  ];
+
+  while (true) {
+    const sourcePrompt = await bot.sendMessage(
+      chatId,
+      `🔍 What is the source of these funds?\n\n${validSources
+        .map((s) => `- ${s}`)
+        .join("\n")}`,
+      { reply_markup: { force_reply: true } }
+    );
+
+    const source = await awaitReply(bot, sourcePrompt.message_id);
+
+    if (validSources.includes(source.toLowerCase())) return source;
+    await bot.sendMessage(
+      chatId,
+      "❌ Invalid source. Please choose one from the list."
+    );
+  }
+};
+
+const captureValidAmount = async (bot, chatId) => {
+  const minAmount = BigInt(100 * 10 ** 6),
+    maxAmount = BigInt(5000000 * 10 ** 6);
+
+  while (true) {
+    const amountInput = await promptUser(
+      bot,
+      chatId,
+      "💰 Enter amount (USDC) - Min: 100, Max: 5,000,000:\n_(Type 'cancel' to return to the transfer menu)_"
+    );
+
+    if (amountInput.toLowerCase() === "cancel")
+      return cancelTransfer(chatId, bot);
+
+    const amount = BigInt(Math.round(parseFloat(amountInput) * 10 ** 6));
+
+    if (amount >= minAmount && amount <= maxAmount) return amount.toString();
+    await bot.sendMessage(
+      chatId,
+      `❌ Amount must be between 100 and 5,000,000 USDC.\n_(Type 'cancel' to return to the transfer menu)_`
+    );
+  }
+};
+
+const promptUser = (bot, chatId, message) => {
+  return new Promise((resolve) => {
+    bot.sendMessage(chatId, message, { parse_mode: "Markdown" });
+
+    const listener = (msg) => {
+      if (msg.chat.id === chatId) {
+        bot.removeListener("message", listener);
+        resolve(msg.text.trim());
+      }
+    };
+
+    bot.on("message", listener);
+  });
+};
+
+const awaitReply = (bot, promptMessageId) => {
+  return new Promise((resolve) => {
+    const handler = (msg) => {
+      if (msg.reply_to_message?.message_id === promptMessageId) {
+        bot.removeListener("message", handler);
+        resolve(msg.text);
+      }
+    };
+    bot.on("message", handler);
+  });
+};
+
+const cancelTransfer = (chatId, bot) => {
+  bot.sendMessage(chatId, "🔙 Transfer cancelled.", getBackToMenuOptions());
+};
+
+const getBackToMenuOptions = () => ({
+  reply_markup: {
+    inline_keyboard: [
+      [{ text: "🔙 Back to main menu", callback_data: "main_menu" }],
+    ],
+  },
+  parse_mode: "Markdown",
+});
+
+module.exports = { initiateDeposit, helpOptions };
