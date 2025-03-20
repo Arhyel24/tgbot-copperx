@@ -234,157 +234,65 @@ bot.on("callback_query", async (query) => {
   const session = await sessions.get(chatId);
 
   if (data === "login") {
-    const loginPrompt = await bot.sendMessage(
-      chatId,
-      "📧 Please reply to this message with your email to authenticate.\n\n" +
-        "🔒 This is required to verify your identity and secure your account. " +
-        "Make sure to enter a valid email address to proceed.",
-      { reply_markup: { force_reply: true } }
-    );
+    try {
+      const loginPrompt = await bot.sendMessage(
+        chatId,
+        "📧 Please reply with your email to authenticate.\n\n" +
+          "🔒 This is required to verify your identity and secure your account.",
+        { reply_markup: { force_reply: true } }
+      );
 
-    bot.on("message", async (emailMsg) => {
-      if (
-        !emailMsg.reply_to_message ||
-        emailMsg.reply_to_message.message_id !== loginPrompt.message_id
-      ) {
-        return;
-      }
-
-      const email = emailMsg.text;
-      let sid = "";
-
-      try {
-        const res = await fetch(`${COPPERX_API}/api/auth/email-otp/request`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${COPPERX_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        });
-
-        if (!res.ok) {
-          let errorMessage = `Error ${res.status}: ${res.statusText}`;
-          try {
-            const errorData = await res.json();
-            errorMessage = errorData.message || errorMessage;
-          } catch (jsonError) {
-            console.error("Error parsing JSON response", jsonError);
-          }
-          throw new Error(errorMessage);
-        }
-
-        const data = await res.json();
-        sid = data.sid;
-
-        const otpPrompt = await bot.sendMessage(
-          chatId,
-          `✅ OTP has been successfully sent to **${data.email}**.\n\n` +
-            "📩 Please reply to this message with the OTP to continue.",
-          { parse_mode: "Markdown", reply_markup: { force_reply: true } }
-        );
-
-        await bot.sendMessage(
-          chatId,
-          "🔄 If you didn't receive it, you can request a new OTP below.",
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: "Resend OTP 🔄",
-                    callback_data: `resend_${data.email}`,
-                  },
-                ],
-              ],
-            },
-          }
-        );
-
-        bot.on("message", async (otpMsg) => {
-          if (
-            !otpMsg.reply_to_message ||
-            otpMsg.reply_to_message.message_id !== otpPrompt.message_id
-          ) {
-            return;
-          }
-
-          const otp = otpMsg.text;
-
-          try {
-            const res = await fetch(
-              `${COPPERX_API}/api/auth/email-otp/authenticate`,
-              {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${COPPERX_API_KEY}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, otp, sid }),
-              }
-            );
-
-            if (!res.ok) {
-              let errorMessage = `Error ${res.status}: ${res.statusText}`;
-              try {
-                const errorData = await res.json();
-                errorMessage = errorData.message || errorMessage;
-              } catch (jsonError) {
-                console.error("Error parsing JSON response", jsonError);
-              }
-              throw new Error(errorMessage);
+      const awaitReply = (promptMessageId) => {
+        return new Promise((resolve) => {
+          const handler = (msg) => {
+            if (
+              msg.reply_to_message &&
+              msg.reply_to_message.message_id === promptMessageId
+            ) {
+              bot.removeListener("message", handler);
+              resolve(msg.text);
             }
-
-            const data = await res.json();
-
-            await initializePusher(
-              data.user.organizationId,
-              chatId,
-              data.accessToken
-            );
-
-            await sessions
-              .set(
-                chatId,
-                data.user.id,
-                data.accessToken,
-                data.user,
-                new Date(data.expireAt)
-              )
-              .then(async () => {
-                await showWelcomeMenu(chatId, bot);
-              });
-          } catch (error) {
-            console.error("OTP authentication failed:", error);
-            bot.sendMessage(
-              chatId,
-              `❌ OTP verification failed.\n\n` +
-                `⚠️ Error: ${
-                  error.message || "An unexpected error occurred."
-                }\n\n` +
-                "🔄 Please try again or request a new OTP if the issue persists."
-            );
-          }
+          };
+          bot.on("message", handler);
         });
-      } catch (error) {
-        console.error("Request failed:", error);
-        bot.sendMessage(
-          chatId,
-          `❌ Failed to send OTP.\n\n` +
-            `⚠️ Error: ${
-              error.message || "An unexpected error occurred."
-            }\n\n` +
-            "🔄 Please try again or use the 'Resend OTP' option if the issue persists."
-        );
-      }
-    });
+      };
 
+      const email = await awaitReply(loginPrompt.message_id);
+
+      const otpData = await requestOTP(chatId, email);
+      if (!otpData) return;
+
+      await authenticateWithOTP(chatId, email, otpData.sid);
+    } catch (error) {
+      console.error("Login flow error:", error);
+      await bot.sendMessage(
+        chatId,
+        "❌ Authentication process failed. Please try again later."
+      );
+    }
     return;
   }
 
   if (data.startsWith("resend_")) {
     const email = data.replace("resend_", "");
+    try {
+      const otpData = await requestOTP(chatId, email, true);
+      if (!otpData) return; 
 
+      await authenticateWithOTP(chatId, email, otpData.sid);
+    } catch (error) {
+      console.error("Resend OTP error:", error);
+      await bot.sendMessage(
+        chatId,
+        `❌ Failed to resend OTP: ${
+          error.message || "Unexpected error occurred."
+        }`
+      );
+    }
+    return;
+  }
+
+  async function requestOTP(chatId, email, isResend = false) {
     try {
       const res = await fetch(`${COPPERX_API}/api/auth/email-otp/request`, {
         method: "POST",
@@ -395,40 +303,55 @@ bot.on("callback_query", async (query) => {
         body: JSON.stringify({ email }),
       });
 
-      if (!res.ok) {
-        let errorMessage = `Error ${res.status}: ${res.statusText}`;
-        try {
-          const errorData = await res.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (jsonError) {
-          console.error("Error parsing JSON response", jsonError);
-        }
-        throw new Error(errorMessage);
-      }
+      const responseData = await handleApiResponse(res);
+      if (!responseData) return null;
 
-      const data = await res.json();
-      const sid = data.sid;
-
-      // ✅ Send a fresh OTP request message
-      const otpPrompt = await bot.sendMessage(
+      await bot.sendMessage(
         chatId,
-        `🔄 OTP has been **resent** to **${data.email}**.\n\n` +
-          "📩 Please reply to this message with the OTP to continue.",
-        { parse_mode: "Markdown", reply_markup: { force_reply: true } }
+        `🔄 OTP has been ${isResend ? "**resent**" : "**sent**"} to **${
+          responseData.email
+        }**.`,
+        { parse_mode: "Markdown" }
       );
 
-      // ✅ Provide a "Resend OTP" button separately
-      await bot.sendMessage(chatId, "🔄 Need another resend? Click below.", {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "Resend OTP 🔄", callback_data: `resend_${data.email}` }],
-          ],
-        },
-      });
+      return responseData;
+    } catch (error) {
+      await bot.sendMessage(
+        chatId,
+        `❌ Failed to ${isResend ? "resend" : "send"} OTP.\n\n` +
+          `⚠️ Error: ${error.message || "An unexpected error occurred."}`
+      );
+      return null;
+    }
+  }
 
-      // ✅ Wait for OTP input again
-      bot.once("message", async (otpMsg) => {
-        const otp = otpMsg.text;
+  async function authenticateWithOTP(chatId, email, sid) {
+    let authenticated = false;
+
+    while (!authenticated) {
+      try {
+        const otpPrompt = await bot.sendMessage(
+          chatId,
+          "📩 Please reply with the OTP sent to your email:",
+          { parse_mode: "Markdown", reply_markup: { force_reply: true } }
+        );
+
+        const awaitReply = (promptMessageId) => {
+          return new Promise((resolve) => {
+            const handler = (msg) => {
+              if (
+                msg.reply_to_message &&
+                msg.reply_to_message.message_id === promptMessageId
+              ) {
+                bot.removeListener("message", handler);
+                resolve(msg.text);
+              }
+            };
+            bot.on("message", handler);
+          });
+        };
+
+        const otp = await awaitReply(otpPrompt.message_id);
 
         const res = await fetch(
           `${COPPERX_API}/api/auth/email-otp/authenticate`,
@@ -443,46 +366,69 @@ bot.on("callback_query", async (query) => {
         );
 
         if (!res.ok) {
-          let errorMessage = `Error ${res.status}: ${res.statusText}`;
+          let errorMessage = "Invalid OTP. Please try again.";
           try {
             const errorData = await res.json();
             errorMessage = errorData.message || errorMessage;
           } catch (jsonError) {
-            console.error("Error parsing JSON response", jsonError);
+            console.error("Error parsing error response:", jsonError);
           }
-          throw new Error(errorMessage);
+
+          await bot.sendMessage(chatId, `❌ ${errorMessage}`, {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: "Resend OTP 🔄", callback_data: `resend_${email}` }],
+              ],
+            },
+          });
+          continue;
         }
 
-        const data = await res.json();
+        const authData = await res.json();
 
         await initializePusher(
-          data.user.organizationId,
+          authData.user.organizationId,
           chatId,
-          data.accessToken
+          authData.accessToken
         );
 
-        await sessions
-          .set(
-            chatId,
-            data.user.id,
-            data.accessToken,
-            data.user,
-            new Date(data.expireAt)
-          )
-          .then(async () => {
-            await showWelcomeMenu(chatId, bot);
-          });
-      });
-    } catch (error) {
-      console.error("Resend OTP failed:", error);
-      bot.sendMessage(
-        chatId,
-        `❌ Failed to resend OTP.\n\n⚠️ Error: ${
-          error.message || "Unexpected error occurred."
-        }`
-      );
+        await sessions.set(
+          chatId,
+          authData.user.id,
+          authData.accessToken,
+          authData.user,
+          new Date(authData.expireAt)
+        );
+
+        await showWelcomeMenu(chatId, bot);
+
+        authenticated = true;
+      } catch (error) {
+        console.error("OTP authentication failed:", error);
+
+        await bot.sendMessage(
+          chatId,
+          `❌ Authentication error: ${
+            error.message || "Unexpected error occurred."
+          }\n\nPlease try again.`
+        );
+      }
     }
-    return;
+  }
+
+  async function handleApiResponse(response) {
+    if (!response.ok) {
+      let errorMessage = `Error ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (jsonError) {
+        console.error("Error parsing error response:", jsonError);
+      }
+      throw new Error(errorMessage);
+    }
+
+    return await response.json();
   }
 
   if (!session) {
