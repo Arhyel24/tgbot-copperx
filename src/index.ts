@@ -338,7 +338,7 @@ bot.on("message", async (msg) => {
     }
   }
 
-  if (/^[#?!]/.test(text)) {
+  if (/^[!]/.test(text)) {
     const aiResponse = await handleUserInput(text);
 
     if (aiResponse.command && validCommands[aiResponse.command]) {

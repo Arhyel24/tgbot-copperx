@@ -91,6 +91,7 @@ This approach ensures that **sensitive user data remains encrypted and protected
    WEBHOOK_URL=<your-webhook-url>
    PORT=<port-number> # Optional, defaults to 3000
    ENCRYPTION_KEY=<your-secure-key>
+   GEMINI_API_KEY=<gemini-api-key>
    ```
 
 4. **Run the Bot**:
