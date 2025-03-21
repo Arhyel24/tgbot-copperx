@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI("AIzaSyD2ylbZ9lFyBA7KwnVmdxgRAoD_o_6tbpY");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-flash",
@@ -11,7 +11,9 @@ interface AIResponse {
   intent: string;
 }
 
-export async function handleUserInput(userMessage: string): Promise<AIResponse> {
+export async function handleUserInput(
+  userMessage: string
+): Promise<AIResponse> {
   try {
     const prompt = `usermessage: ${userMessage}. Understand what the user is trying to do and Match this request to one of these commands: start, menu, wallet, transfer, account, help, logout, main_menu, deposit, funds_transfer, view_wallets, check_balances, set_default_wallet, view_bank_account, transaction_history, transfer_email, transfer_wallet, transfer_bank, transfer_bulk, transfer_list, payees, add_payee, view_payees, edit_payee, delete_payee, view_profile, check_kyc, points. Respond only one matching command. Use this JSON format: { "command": "string",
       "intent": "string" } Return only the JSON object, nothing else.`;
