@@ -524,7 +524,6 @@ const captureValidPurpose = async (bot, chatId, purposeOptions) => {
     if (purposeOptions.includes(response)) {
       return response;
     }
-
     await bot.sendMessage(
       chatId,
       "❌ Invalid option! Please type the option exactly as shown."
