@@ -197,35 +197,12 @@ const bankWithdrawal = async (
   accessToken: string
 ) => {
   try {
-    let amountInUSD;
-    while (true) {
-      const amountInput = await promptUser(
-        bot,
-        chatId,
-        "💰 *Enter the withdrawal amount (USD):*\n_(Type 'cancel' to return to the transfer menu)_"
-      );
-      if (amountInput.toLowerCase() === "cancel")
-        return cancelTransfer(chatId, bot);
-
-      const amount = parseFloat(amountInput);
-      if (isNaN(amount) || amount <= 0) {
-        await bot.sendMessage(
-          chatId,
-          "❌ *Invalid amount! Please enter a valid number.*"
-        );
-        continue;
-      }
-
-      amountInUSD = BigInt(Math.round(amount * 10 ** 6));
-      if (amountInUSD < minAmount || amountInUSD > maxAmount) {
-        await bot.sendMessage(
-          chatId,
-          `❌ *Amount must be between 100 USD and 5,000,000 USD.*`
-        );
-      } else {
-        break;
-      }
-    }
+    const amountInUSD = await captureValidAmount(
+      bot,
+      chatId,
+      minAmount,
+      maxAmount
+    );
 
     const preferredBankAccountId = await promptUser(
       bot,
@@ -242,14 +219,8 @@ const bankWithdrawal = async (
       sourceCountry: "usa",
       destinationCountry: "usa",
       amount: amountInUSD.toString(),
-      currency: "USD",
-      preferredDestinationPaymentMethods: ["string"],
-      preferredProviderId: "string",
-      thirdPartyPayment: true,
+      currency: "USDC",
       destinationCurrency: "USD",
-      onlyRemittance: true,
-      preferredBankAccountId,
-      payeeId,
     };
 
     const quoteResponse = await fetchQuote(accessToken, quoteRequest);
@@ -258,24 +229,13 @@ const bankWithdrawal = async (
     }
 
     const withdrawalData = {
-      invoiceNumber: await promptUser(
-        bot,
-        chatId,
-        "📜 *Enter Invoice Number:*"
-      ),
-      invoiceUrl: await promptUser(bot, chatId, "🔗 *Enter Invoice URL:*"),
-      purposeCode: "self",
+      invoiceNumber: crypto.randomUUID(),
+      purposeCode: await captureValidPurpose(bot, chatId, purposeOptions),
       sourceOfFunds: "salary",
       recipientRelationship: "self",
       quotePayload: quoteResponse.quotePayload,
       quoteSignature: quoteResponse.quoteSignature,
-      preferredWalletId: preferredBankAccountId,
       customerData: await captureCustomerData(bot, chatId),
-      sourceOfFundsFile: await promptUser(
-        bot,
-        chatId,
-        "📁 *Enter Source of Funds File URL:*"
-      ),
       note: await promptUser(
         bot,
         chatId,
@@ -285,8 +245,6 @@ const bankWithdrawal = async (
 
     if (
       withdrawalData.invoiceNumber.toLowerCase() === "cancel" ||
-      withdrawalData.invoiceUrl.toLowerCase() === "cancel" ||
-      withdrawalData.sourceOfFundsFile.toLowerCase() === "cancel" ||
       withdrawalData.note.toLowerCase() === "cancel"
     ) {
       return cancelTransfer(chatId, bot);
@@ -294,10 +252,8 @@ const bankWithdrawal = async (
 
     const confirmationMessage = `⚡ *Confirm Bank Withdrawal:*\n
     - 📜 *Invoice Number:* ${withdrawalData.invoiceNumber}
-    - 🔗 *Invoice URL:* ${withdrawalData.invoiceUrl}
     - 💰 *Amount:* ${amountInUSD} USD
     - ⏳ *Estimated Arrival:* ${quoteResponse.arrivalTimeMessage}
-    - 🏦 *Preferred Bank Account:* ${withdrawalData.preferredWalletId}
     - 👤 *Name:* ${withdrawalData.customerData.name}
     - 🏢 *Business Name:* ${withdrawalData.customerData.businessName}
     - 📧 *Email:* ${withdrawalData.customerData.email}
@@ -438,6 +394,8 @@ const bulkTransfer = async (
       });
     }
 
+    let totalAmount = 0;
+
     let confirmationMessage = `⚡ *Confirm Bulk Transfer:*\n\n`;
     bulkData.requests.forEach((req, index) => {
       confirmationMessage += `🔹 *Recipient ${index + 1}:*\n  - ${
@@ -447,7 +405,12 @@ const bulkTransfer = async (
       }\n  - *Amount:* ${
         BigInt(req.request.amount) / 10n ** 6n
       } USDC\n  - *Purpose:* ${req.request.purposeCode}\n\n`;
+
+      totalAmount += Number(req.request.amount);
     });
+
+    confirmationMessage += `*Total Amount:* ${totalAmount / 10 ** 6} USDC\n\n`;
+
     confirmationMessage +=
       "*Reply 'YES' to proceed, 'NO' to cancel, or 'cancel' to return to the transfer menu.*";
 

@@ -70,13 +70,7 @@ export interface QuoteRequest {
   destinationCountry: string;
   amount: string;
   currency: string;
-  preferredDestinationPaymentMethods: string[];
-  preferredProviderId: string;
-  thirdPartyPayment: boolean;
   destinationCurrency: string;
-  onlyRemittance: boolean;
-  preferredBankAccountId: string;
-  payeeId: string;
 }
 
 export interface QuoteResponse {

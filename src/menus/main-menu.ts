@@ -28,10 +28,6 @@ const showMainMenu = async (
       To ask a question or give a command, start your message with *!*.` +
       
       `✅ Example: *!Check my balance* → Use the command "/check_balances" to view your funds.` +
-      `✅ Example: *!Send money to John* → Use the command "/funds_transfer" to transfer funds.` +
-      `✅ Example: *!Withdraw to my bank* → Use the command "/withdraw" to move funds to your linked bank account.
-
-` +
       `*⚡ Select an option below to get started:*`,
     {
       parse_mode: "Markdown",
