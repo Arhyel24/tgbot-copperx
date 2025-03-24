@@ -18,12 +18,10 @@ import { getNetworkName, handleCheckBalances, handleSetDefaultWallet, handleTran
 import { bankWithdrawal, bulkTransfer, emailTransfer, listTransfers, walletTransfer, } from "./handlers/funds-handler.js";
 import { handleUserInput } from "./actions/get-ai-response.js";
 dotenv.config();
-// Connect to MongoDB
 mongoose
     .connect(process.env.MONGO_URI)
     .then(() => console.log("Connected to MongoDB"))
     .catch((err) => console.error("MongoDB connection error:", err));
-// Required environment variables
 const requiredEnvVars = [
     "BOT_TOKEN",
     "COPPERX_API",
@@ -41,7 +39,6 @@ requiredEnvVars.forEach((envVar) => {
         process.exit(1);
     }
 });
-// Extract environment variables with type assertion
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const COPPERX_API = process.env.COPPERX_API;
 const COPPERX_API_KEY = process.env.COPPERX_API_KEY;
@@ -515,21 +512,21 @@ bot.on("callback_query", async (query) => {
             break;
     }
 });
+//Webhook setup and server initialization
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
 const PORT = parseInt(process.env.PORT || "3000", 10);
+const SECRET_PATH = `/webhook/${BOT_TOKEN.slice(0, 10)}`;
 bot
-    .setWebHook(`${WEBHOOK_URL}/bot${BOT_TOKEN}`)
-    .then(() => console.log(`✅ Webhook set at ${WEBHOOK_URL}/bot${BOT_TOKEN.slice(0, 6)}...`))
+    .setWebHook(`${WEBHOOK_URL}${SECRET_PATH}`)
+    .then(() => console.log(`✅ Webhook set at ${WEBHOOK_URL}${SECRET_PATH}`))
     .catch((err) => console.error("❌ Webhook error:", err.message));
 app.get("/", (res) => {
     res.send("🚀 Bot is up and running! Listening for incoming messages...");
 });
-app.post(`/bot${BOT_TOKEN}`, (req, res) => {
+app.post(SECRET_PATH, (req, res) => {
     bot.processUpdate(req.body);
     res.sendStatus(200);
 });
 app.listen(PORT, () => {
     console.log(`🚀 Webhook server running on port ${PORT}`);
-    console.log("🚀 Bot is up and running! Listening for incoming messages...");
 });
-export default app;

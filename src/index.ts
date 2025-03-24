@@ -46,13 +46,11 @@ import { handleUserInput } from "./actions/get-ai-response.js";
 
 dotenv.config();
 
-// Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI as string)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err: Error) => console.error("MongoDB connection error:", err));
 
-// Required environment variables
 const requiredEnvVars: string[] = [
   "BOT_TOKEN",
   "COPPERX_API",
@@ -72,7 +70,6 @@ requiredEnvVars.forEach((envVar) => {
   }
 });
 
-// Extract environment variables with type assertion
 const BOT_TOKEN: string = process.env.BOT_TOKEN as string;
 const COPPERX_API: string = process.env.COPPERX_API as string;
 const COPPERX_API_KEY: string = process.env.COPPERX_API_KEY as string;
@@ -751,30 +748,26 @@ bot.on("callback_query", async (query: TelegramBot.CallbackQuery) => {
   }
 });
 
-const WEBHOOK_URL: string = process.env.WEBHOOK_URL as string;
-const PORT: number = parseInt(process.env.PORT || "3000", 10);
+//Webhook setup and server initialization
+const WEBHOOK_URL = process.env.WEBHOOK_URL as string;
+const PORT = parseInt(process.env.PORT || "3000", 10);
+
+const SECRET_PATH = `/webhook/${BOT_TOKEN.slice(0, 10)}`;
 
 bot
-  .setWebHook(`${WEBHOOK_URL}/bot${BOT_TOKEN}`)
-  .then(() =>
-    console.log(
-      `✅ Webhook set at ${WEBHOOK_URL}/bot${BOT_TOKEN.slice(0, 6)}...`
-    )
-  )
+  .setWebHook(`${WEBHOOK_URL}${SECRET_PATH}`)
+  .then(() => console.log(`✅ Webhook set at ${WEBHOOK_URL}${SECRET_PATH}`))
   .catch((err: Error) => console.error("❌ Webhook error:", err.message));
 
 app.get("/", (res: Response) => {
   res.send("🚀 Bot is up and running! Listening for incoming messages...");
 });
 
-app.post(`/bot${BOT_TOKEN}`, (req: Request, res: Response) => {
+app.post(SECRET_PATH, (req: Request, res: Response) => {
   bot.processUpdate(req.body);
   res.sendStatus(200);
 });
 
 app.listen(PORT, () => {
   console.log(`🚀 Webhook server running on port ${PORT}`);
-  console.log("🚀 Bot is up and running! Listening for incoming messages...");
 });
-
-export default app;
