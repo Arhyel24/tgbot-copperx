@@ -772,10 +772,9 @@ app.post(`/bot${BOT_TOKEN}`, (req: Request, res: Response) => {
   res.sendStatus(200);
 });
 
-// app.listen(PORT, () => {
-//   console.log(`🚀 Webhook server running on port ${PORT}`);
-// });
-
-// console.log("🚀 Bot is up and running! Listening for incoming messages...");
+app.listen(PORT, () => {
+  console.log(`🚀 Webhook server running on port ${PORT}`);
+  console.log("🚀 Bot is up and running! Listening for incoming messages...");
+});
 
 export default app;
