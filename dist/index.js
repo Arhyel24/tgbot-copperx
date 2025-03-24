@@ -219,7 +219,7 @@ bot.on("message", async (msg) => {
                 "📌 Use /menu to see the list of available commands and try again.");
         }
     }
-    if (/^[#?!]/.test(text)) {
+    if (/^[!]/.test(text)) {
         const aiResponse = await handleUserInput(text);
         if (aiResponse.command && validCommands[aiResponse.command]) {
             return await validCommands[aiResponse.command](chatId, bot);

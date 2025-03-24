@@ -104,24 +104,7 @@ const walletTransfer = async (chatId, bot, accessToken) => {
 };
 const bankWithdrawal = async (chatId, bot, accessToken) => {
     try {
-        let amountInUSD;
-        while (true) {
-            const amountInput = await promptUser(bot, chatId, "💰 *Enter the withdrawal amount (USD):*\n_(Type 'cancel' to return to the transfer menu)_");
-            if (amountInput.toLowerCase() === "cancel")
-                return cancelTransfer(chatId, bot);
-            const amount = parseFloat(amountInput);
-            if (isNaN(amount) || amount <= 0) {
-                await bot.sendMessage(chatId, "❌ *Invalid amount! Please enter a valid number.*");
-                continue;
-            }
-            amountInUSD = BigInt(Math.round(amount * 10 ** 6));
-            if (amountInUSD < minAmount || amountInUSD > maxAmount) {
-                await bot.sendMessage(chatId, `❌ *Amount must be between 100 USD and 5,000,000 USD.*`);
-            }
-            else {
-                break;
-            }
-        }
+        const amountInUSD = await captureValidAmount(bot, chatId, minAmount, maxAmount);
         const preferredBankAccountId = await promptUser(bot, chatId, "🏦 *Enter Preferred Bank Account ID:*");
         if (preferredBankAccountId.toLowerCase() === "cancel")
             return cancelTransfer(chatId, bot);
@@ -132,44 +115,31 @@ const bankWithdrawal = async (chatId, bot, accessToken) => {
             sourceCountry: "usa",
             destinationCountry: "usa",
             amount: amountInUSD.toString(),
-            currency: "USD",
-            preferredDestinationPaymentMethods: ["string"],
-            preferredProviderId: "string",
-            thirdPartyPayment: true,
+            currency: "USDC",
             destinationCurrency: "USD",
-            onlyRemittance: true,
-            preferredBankAccountId,
-            payeeId,
         };
         const quoteResponse = await fetchQuote(accessToken, quoteRequest);
         if (!quoteResponse || quoteResponse.error) {
             throw new Error(quoteResponse?.error || "Failed to fetch quote.");
         }
         const withdrawalData = {
-            invoiceNumber: await promptUser(bot, chatId, "📜 *Enter Invoice Number:*"),
-            invoiceUrl: await promptUser(bot, chatId, "🔗 *Enter Invoice URL:*"),
-            purposeCode: "self",
+            invoiceNumber: crypto.randomUUID(),
+            purposeCode: await captureValidPurpose(bot, chatId, purposeOptions),
             sourceOfFunds: "salary",
             recipientRelationship: "self",
             quotePayload: quoteResponse.quotePayload,
             quoteSignature: quoteResponse.quoteSignature,
-            preferredWalletId: preferredBankAccountId,
             customerData: await captureCustomerData(bot, chatId),
-            sourceOfFundsFile: await promptUser(bot, chatId, "📁 *Enter Source of Funds File URL:*"),
             note: await promptUser(bot, chatId, "📝 *Enter a Note for the withdrawal:*"),
         };
         if (withdrawalData.invoiceNumber.toLowerCase() === "cancel" ||
-            withdrawalData.invoiceUrl.toLowerCase() === "cancel" ||
-            withdrawalData.sourceOfFundsFile.toLowerCase() === "cancel" ||
             withdrawalData.note.toLowerCase() === "cancel") {
             return cancelTransfer(chatId, bot);
         }
         const confirmationMessage = `⚡ *Confirm Bank Withdrawal:*\n
     - 📜 *Invoice Number:* ${withdrawalData.invoiceNumber}
-    - 🔗 *Invoice URL:* ${withdrawalData.invoiceUrl}
     - 💰 *Amount:* ${amountInUSD} USD
     - ⏳ *Estimated Arrival:* ${quoteResponse.arrivalTimeMessage}
-    - 🏦 *Preferred Bank Account:* ${withdrawalData.preferredWalletId}
     - 👤 *Name:* ${withdrawalData.customerData.name}
     - 🏢 *Business Name:* ${withdrawalData.customerData.businessName}
     - 📧 *Email:* ${withdrawalData.customerData.email}
@@ -246,12 +216,15 @@ const bulkTransfer = async (chatId, bot, accessToken, userId) => {
                 },
             });
         }
+        let totalAmount = 0;
         let confirmationMessage = `⚡ *Confirm Bulk Transfer:*\n\n`;
         bulkData.requests.forEach((req, index) => {
             confirmationMessage += `🔹 *Recipient ${index + 1}:*\n  - ${req.request.walletAddress
                 ? `*Wallet:* ${req.request.walletAddress}`
                 : `*Email:* ${req.request.email}`}\n  - *Amount:* ${BigInt(req.request.amount) / 10n ** 6n} USDC\n  - *Purpose:* ${req.request.purposeCode}\n\n`;
+            totalAmount += Number(req.request.amount);
         });
+        confirmationMessage += `*Total Amount:* ${totalAmount / 10 ** 6} USDC\n\n`;
         confirmationMessage +=
             "*Reply 'YES' to proceed, 'NO' to cancel, or 'cancel' to return to the transfer menu.*";
         const confirmation = await promptUser(bot, chatId, confirmationMessage);
