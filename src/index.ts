@@ -352,7 +352,6 @@ bot.on("message", async (msg) => {
         "📌 Use /menu to see the list of available commands and try again."
     );
   }
-
 });
 
 bot.on("callback_query", async (query: TelegramBot.CallbackQuery) => {
@@ -763,6 +762,10 @@ bot
     )
   )
   .catch((err: Error) => console.error("❌ Webhook error:", err.message));
+
+app.get("/", (res: Response) => {
+  res.send("🚀 Bot is up and running! Listening for incoming messages...");
+});
 
 app.post(`/bot${BOT_TOKEN}`, (req: Request, res: Response) => {
   bot.processUpdate(req.body);

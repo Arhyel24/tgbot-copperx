@@ -521,6 +521,9 @@ bot
     .setWebHook(`${WEBHOOK_URL}/bot${BOT_TOKEN}`)
     .then(() => console.log(`✅ Webhook set at ${WEBHOOK_URL}/bot${BOT_TOKEN.slice(0, 6)}...`))
     .catch((err) => console.error("❌ Webhook error:", err.message));
+app.get("/", (res) => {
+    res.send("🚀 Bot is up and running! Listening for incoming messages...");
+});
 app.post(`/bot${BOT_TOKEN}`, (req, res) => {
     bot.processUpdate(req.body);
     res.sendStatus(200);
