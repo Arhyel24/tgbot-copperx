@@ -1,4 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
+import { logger } from "@/utils/logger.js";
 
 const showAccountMenu = async (
   chatId: number,
@@ -41,7 +42,7 @@ const showAccountMenu = async (
       }
     );
   } catch (error) {
-    console.error("❌ Error sending account menu:", error);
+    logger.error("❌ Error sending account menu:", error);
   }
 };
 

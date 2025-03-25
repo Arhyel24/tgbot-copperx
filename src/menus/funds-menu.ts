@@ -1,4 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
+import { logger } from "@/utils/logger.js";
 
 const showFundsMenu = async (
   chatId: number,
@@ -34,7 +35,7 @@ const showFundsMenu = async (
       }
     );
   } catch (error) {
-    console.error("❌ Error sending funds menu:", error);
+    logger.error("❌ Error sending funds menu:", error);
   }
 };
 

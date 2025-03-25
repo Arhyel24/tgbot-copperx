@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({
@@ -29,12 +30,12 @@ export async function handleUserInput(userMessage) {
             return parsedResult;
         }
         catch (parseError) {
-            console.error("Error parsing JSON response:", jsonString);
+            logger.error("Error parsing JSON response:", jsonString);
             return { command: null, intent: "Could not parse response" };
         }
     }
     catch (error) {
-        console.error("Google Generative AI API Error:", error.message);
+        logger.error("Google Generative AI API Error:", error.message);
         return { command: null, intent: "An error occurred. Please try again." };
     }
 }

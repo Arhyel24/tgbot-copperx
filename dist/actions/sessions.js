@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import dotenv from "dotenv";
 import Session from "../models/session.js";
+import { logger } from "@/utils/logger.js";
 dotenv.config();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 if (!ENCRYPTION_KEY) {
@@ -36,7 +37,7 @@ const sessions = {
             return null;
         }
         catch (error) {
-            console.error("❌ Error getting session:", error);
+            logger.error("❌ Error getting session:", error);
             return null;
         }
     },
@@ -53,7 +54,7 @@ const sessions = {
             }, { upsert: true, new: true });
         }
         catch (error) {
-            console.error("❌ Error setting session:", error);
+            logger.error("❌ Error setting session:", error);
         }
     },
     async delete(chatId) {
@@ -61,7 +62,7 @@ const sessions = {
             await Session.deleteOne({ chatId });
         }
         catch (error) {
-            console.error("❌ Error deleting session:", error);
+            logger.error("❌ Error deleting session:", error);
         }
     },
 };

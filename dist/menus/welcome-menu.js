@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger.js";
 const showWelcomeMenu = async (chatId, bot) => {
     try {
         await bot.sendMessage(chatId, `*🤖 Welcome to Copperx Bot!*\n\n` +
@@ -23,7 +24,7 @@ const showWelcomeMenu = async (chatId, bot) => {
         });
     }
     catch (error) {
-        console.error("❌ Error sending welcome menu:", error);
+        logger.error("❌ Error sending welcome menu:", error);
     }
 };
 export default showWelcomeMenu;

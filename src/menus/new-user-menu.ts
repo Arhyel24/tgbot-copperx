@@ -1,4 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
+import { logger } from "@/utils/logger.js";
 
 const newUserMenu = async (chatId: number, bot: TelegramBot): Promise<void> => {
   try {
@@ -24,7 +25,7 @@ const newUserMenu = async (chatId: number, bot: TelegramBot): Promise<void> => {
       }
     );
   } catch (error) {
-    console.error("❌ Error sending new user menu:", error);
+    logger.error("❌ Error sending new user menu:", error);
   }
 };
 

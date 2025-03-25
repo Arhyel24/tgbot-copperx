@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger.js";
 const newUserMenu = async (chatId, bot) => {
     try {
         await bot.sendMessage(chatId, `*👋 Welcome to Copperx USDC Bot!*\n\n` +
@@ -19,7 +20,7 @@ const newUserMenu = async (chatId, bot) => {
         });
     }
     catch (error) {
-        console.error("❌ Error sending new user menu:", error);
+        logger.error("❌ Error sending new user menu:", error);
     }
 };
 export default newUserMenu;

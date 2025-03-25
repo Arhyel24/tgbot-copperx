@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import dotenv from "dotenv";
 import Session, { ISession } from "../models/session.js";
+import { logger } from "@/utils/logger.js";
 
 dotenv.config();
 
@@ -51,7 +52,7 @@ const sessions = {
       await Session.deleteOne({ chatId });
       return null;
     } catch (error) {
-      console.error("❌ Error getting session:", error);
+      logger.error("❌ Error getting session:", error);
       return null;
     }
   },
@@ -79,7 +80,7 @@ const sessions = {
         { upsert: true, new: true }
       );
     } catch (error) {
-      console.error("❌ Error setting session:", error);
+      logger.error("❌ Error setting session:", error);
     }
   },
 
@@ -87,7 +88,7 @@ const sessions = {
     try {
       await Session.deleteOne({ chatId });
     } catch (error) {
-      console.error("❌ Error deleting session:", error);
+      logger.error("❌ Error deleting session:", error);
     }
   },
 };

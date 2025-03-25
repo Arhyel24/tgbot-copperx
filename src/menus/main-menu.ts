@@ -1,4 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
+import { logger } from "@/utils/logger.js";
 
 const showMainMenu = async (chatId: number, bot: TelegramBot) => {
   try {
@@ -33,7 +34,7 @@ const showMainMenu = async (chatId: number, bot: TelegramBot) => {
       }
     );
   } catch (error) {
-    console.error("❌ Error sending main menu:", error);
+    logger.error("❌ Error sending main menu:", error);
   }
 };
 

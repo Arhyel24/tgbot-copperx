@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger.js";
 const showPayeesMenu = async (chatId, bot) => {
     try {
         await bot.sendMessage(chatId, `*📋 Manage Payees*\n\n` +
@@ -25,7 +26,7 @@ const showPayeesMenu = async (chatId, bot) => {
         });
     }
     catch (error) {
-        console.error("❌ Error sending payees menu:", error);
+        logger.error("❌ Error sending payees menu:", error);
     }
 };
 export default showPayeesMenu;

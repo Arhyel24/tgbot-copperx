@@ -43,14 +43,15 @@ import {
   walletTransfer,
 } from "./handlers/funds-handler.js";
 import { handleUserInput } from "./actions/get-ai-response.js";
+import { logger } from "./utils/logger.js";
 
 dotenv.config();
 
 mongoose
   .connect(process.env.MONGO_URI as string)
-  .then(() => console.log("Connected to MongoDB"))
+  .then(() => logger.log("Connected to MongoDB"))
   .catch((err: Error) =>
-    console.error("MongoDB connection error:", err.message)
+    logger.error("MongoDB connection error:", err.message)
   );
 
 const requiredEnvVars: string[] = [
@@ -67,7 +68,7 @@ const requiredEnvVars: string[] = [
 
 requiredEnvVars.forEach((envVar) => {
   if (!process.env[envVar]) {
-    console.error(`${envVar} is missing in .env file!`);
+    logger.error(`${envVar} is missing in .env file!`);
     process.exit(1);
   }
 });
@@ -100,8 +101,8 @@ const initializePusher = async (
     cluster: PUSHER_CLUSTER,
     authorizer: (channel) => ({
       authorize: async (socketId: string, callback: Function) => {
-        console.log("Socket ID:", socketId);
-        console.log("Channel name:", channel.name);
+        logger.log("Socket ID:", socketId);
+        logger.log("Channel name:", channel.name);
 
         try {
           const response = await fetch(
@@ -127,7 +128,7 @@ const initializePusher = async (
             callback(new Error("Pusher authentication failed"), null);
           }
         } catch (error) {
-          console.error("❌ Pusher authorization error:", error);
+          logger.error("❌ Pusher authorization error:", error);
           callback(error, null);
         }
       },
@@ -146,7 +147,7 @@ const initializePusher = async (
   });
 
   channel.bind("pusher:subscription_error", (error: any) => {
-    console.error("❌ Subscription error:", error);
+    logger.error("❌ Subscription error:", error);
   });
 
   channel.bind("deposit", (data: DepositData) => {
@@ -157,14 +158,14 @@ const initializePusher = async (
   });
 
   pusherClient.connection.bind("disconnected", () => {
-    console.warn("⚠️ Pusher disconnected. Attempting to reconnect...");
+    logger.warn("⚠️ Pusher disconnected. Attempting to reconnect...");
     initializePusher(organizationId, chatId, token);
   });
 };
 
-console.log("🔹 Bot Token Loaded:", BOT_TOKEN.slice(0, 10) + "...");
-console.log("API endpoint:", COPPERX_API);
-console.log("API Key:", COPPERX_API_KEY.slice(0, 6) + "...");
+logger.log("🔹 Bot Token Loaded:", BOT_TOKEN.slice(0, 10) + "...");
+logger.log("API endpoint:", COPPERX_API);
+logger.log("API Key:", COPPERX_API_KEY.slice(0, 6) + "...");
 
 bot.setMyCommands([
   { command: "start", description: "Start the bot" },
@@ -324,7 +325,7 @@ bot.on("message", async (msg) => {
   const text = msg?.text?.trim() || "";
 
   if (!chatId || !text) {
-    console.error("❌ Error: Invalid message structure", msg);
+    logger.error("❌ Error: Invalid message structure", msg);
     return;
   }
 
@@ -364,7 +365,7 @@ bot.on("message", async (msg) => {
           }
         );
       } catch (error) {
-        console.error("❌ AI processing error:", error);
+        logger.error("❌ AI processing error:", error);
         return bot.sendMessage(
           chatId,
           "❌ An error occurred while processing your request. Please try again later."
@@ -372,7 +373,7 @@ bot.on("message", async (msg) => {
       }
     }
   } catch (error) {
-    console.error("❌ Unexpected error:", (error as Error).message);
+    logger.error("❌ Unexpected error:", (error as Error).message);
     return bot.sendMessage(
       chatId,
       "❌ An unexpected error occurred. Please try again later."
@@ -785,19 +786,19 @@ const SECRET_PATH = `/webhook/${BOT_TOKEN.slice(0, 10)}`;
 
 bot
   .setWebHook(`${WEBHOOK_URL}${SECRET_PATH}`)
-  .then(() => console.log(`✅ Webhook set at ${WEBHOOK_URL}${SECRET_PATH}`))
-  .catch((err: Error) => console.error("❌ Webhook error:", err.message));
+  .then(() => logger.log(`✅ Webhook set at ${WEBHOOK_URL}${SECRET_PATH}`))
+  .catch((err: Error) => logger.error("❌ Webhook error:", err.message));
 
 app.post(SECRET_PATH, async (req: Request, res: Response) => {
   try {
     await bot.processUpdate(req.body);
     res.sendStatus(200);
   } catch (err) {
-    console.error("❌ Error processing update:", (err as Error).message);
+    logger.error("❌ Error processing update:", (err as Error).message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Webhook server running on port ${PORT}`);
+  logger.log(`🚀 Webhook server running on port ${PORT}`);
 });

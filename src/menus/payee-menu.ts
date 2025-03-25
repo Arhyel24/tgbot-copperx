@@ -1,4 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
+import { logger } from "@/utils/logger.js";
 
 const showPayeesMenu = async (
   chatId: number,
@@ -33,7 +34,7 @@ const showPayeesMenu = async (
       }
     );
   } catch (error) {
-    console.error("❌ Error sending payees menu:", error);
+    logger.error("❌ Error sending payees menu:", error);
   }
 };
 

@@ -1,4 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
+import { logger } from "@/utils/logger.js";
 
 const showWalletMenu = async (
   chatId: number,
@@ -40,7 +41,7 @@ const showWalletMenu = async (
       }
     );
   } catch (error) {
-    console.error("❌ Error sending wallet menu:", error);
+    logger.error("❌ Error sending wallet menu:", error);
   }
 };
 

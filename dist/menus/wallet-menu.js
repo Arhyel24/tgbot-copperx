@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger.js";
 const showWalletMenu = async (chatId, bot) => {
     try {
         await bot.sendMessage(chatId, `*👛 Wallet Management*\n\n` +
@@ -32,7 +33,7 @@ const showWalletMenu = async (chatId, bot) => {
         });
     }
     catch (error) {
-        console.error("❌ Error sending wallet menu:", error);
+        logger.error("❌ Error sending wallet menu:", error);
     }
 };
 export default showWalletMenu;

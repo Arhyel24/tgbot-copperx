@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger.js";
 const showMainMenu = async (chatId, bot) => {
     try {
         await bot.sendMessage(chatId, `*⚙️ Manage Your Copperx Account*\n\n` +
@@ -28,7 +29,7 @@ const showMainMenu = async (chatId, bot) => {
         });
     }
     catch (error) {
-        console.error("❌ Error sending main menu:", error);
+        logger.error("❌ Error sending main menu:", error);
     }
 };
 export default showMainMenu;

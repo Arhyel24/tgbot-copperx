@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger.js";
 const showFundsMenu = async (chatId, bot) => {
     try {
         await bot.sendMessage(chatId, `*💸 Funds Transfer*\n\n` +
@@ -26,7 +27,7 @@ const showFundsMenu = async (chatId, bot) => {
         });
     }
     catch (error) {
-        console.error("❌ Error sending funds menu:", error);
+        logger.error("❌ Error sending funds menu:", error);
     }
 };
 export default showFundsMenu;

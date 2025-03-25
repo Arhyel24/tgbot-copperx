@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger.js";
 const showAccountMenu = async (chatId, bot) => {
     try {
         await bot.sendMessage(chatId, `*🔑 Account Management*\n\n` +
@@ -33,7 +34,7 @@ const showAccountMenu = async (chatId, bot) => {
         });
     }
     catch (error) {
-        console.error("❌ Error sending account menu:", error);
+        logger.error("❌ Error sending account menu:", error);
     }
 };
 export default showAccountMenu;
