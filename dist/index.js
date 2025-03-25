@@ -21,7 +21,7 @@ dotenv.config();
 mongoose
     .connect(process.env.MONGO_URI)
     .then(() => console.log("Connected to MongoDB"))
-    .catch((err) => console.error("MongoDB connection error:", err));
+    .catch((err) => console.error("MongoDB connection error:", err.message));
 const requiredEnvVars = [
     "BOT_TOKEN",
     "COPPERX_API",
@@ -203,27 +203,45 @@ async function handleAuthenticatedCommand(chatId, bot, commandHandler, includeUs
     return commandHandler(chatId, bot, session.accessToken, includeUserId ? session.userId : undefined);
 }
 bot.on("message", async (msg) => {
-    const chatId = msg.chat.id;
-    const text = msg.text?.trim() || "";
-    if (text.startsWith("/")) {
-        const command = text.slice(1).toLowerCase();
-        if (validCommands[command]) {
-            return await validCommands[command](chatId, bot);
+    const chatId = msg?.chat?.id;
+    const text = msg?.text?.trim() || "";
+    if (!chatId || !text) {
+        console.error("❌ Error: Invalid message structure", msg);
+        return;
+    }
+    try {
+        if (text.startsWith("/")) {
+            const command = text.slice(1).toLowerCase();
+            if (validCommands[command]) {
+                return await validCommands[command](chatId, bot);
+            }
+            else {
+                return bot.sendMessage(chatId, "❌ Invalid command!\n\n" +
+                    "⚠️ The command you entered is not recognized.\n" +
+                    "📌 Use /menu to see the list of available commands and try again.");
+            }
         }
-        else {
-            return bot.sendMessage(chatId, "❌ Invalid command!\n\n" +
-                "⚠️ The command you entered is not recognized.\n" +
-                "📌 Use /menu to see the list of available commands and try again.");
+        if (text.startsWith("!")) {
+            try {
+                const aiResponse = await handleUserInput(text);
+                if (aiResponse?.command && validCommands[aiResponse.command]) {
+                    return await validCommands[aiResponse.command](chatId, bot);
+                }
+                return bot.sendMessage(chatId, `🤖 I understand that you're trying to: *${aiResponse?.intent || "something"}*\n\n` +
+                    "❌ But I couldn't find a matching command.\n" +
+                    "📌 Use /menu to see the list of available commands and try again.", {
+                    parse_mode: "Markdown",
+                });
+            }
+            catch (error) {
+                console.error("❌ AI processing error:", error);
+                return bot.sendMessage(chatId, "❌ An error occurred while processing your request. Please try again later.");
+            }
         }
     }
-    if (/^[!]/.test(text)) {
-        const aiResponse = await handleUserInput(text);
-        if (aiResponse.command && validCommands[aiResponse.command]) {
-            return await validCommands[aiResponse.command](chatId, bot);
-        }
-        return bot.sendMessage(chatId, `🤖 I understand that you're trying to: *${aiResponse.intent}*\n\n` +
-            "❌ But I couldn't find a matching command.\n" +
-            "📌 Use /menu to see the list of available commands and try again.");
+    catch (error) {
+        console.error("❌ Unexpected error:", error.message);
+        return bot.sendMessage(chatId, "❌ An unexpected error occurred. Please try again later.");
     }
 });
 bot.on("callback_query", async (query) => {
@@ -520,12 +538,15 @@ bot
     .setWebHook(`${WEBHOOK_URL}${SECRET_PATH}`)
     .then(() => console.log(`✅ Webhook set at ${WEBHOOK_URL}${SECRET_PATH}`))
     .catch((err) => console.error("❌ Webhook error:", err.message));
-app.get("/", (res) => {
-    res.send("🚀 Bot is up and running! Listening for incoming messages...");
-});
-app.post(SECRET_PATH, (req, res) => {
-    bot.processUpdate(req.body);
-    res.sendStatus(200);
+app.post(SECRET_PATH, async (req, res) => {
+    try {
+        await bot.processUpdate(req.body);
+        res.sendStatus(200);
+    }
+    catch (err) {
+        console.error("❌ Error processing update:", err.message);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
 app.listen(PORT, () => {
     console.log(`🚀 Webhook server running on port ${PORT}`);

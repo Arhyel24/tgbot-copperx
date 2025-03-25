@@ -105,12 +105,6 @@ const walletTransfer = async (chatId, bot, accessToken) => {
 const bankWithdrawal = async (chatId, bot, accessToken) => {
     try {
         const amountInUSD = await captureValidAmount(bot, chatId, minAmount, maxAmount);
-        const preferredBankAccountId = await promptUser(bot, chatId, "🏦 *Enter Preferred Bank Account ID:*");
-        if (preferredBankAccountId.toLowerCase() === "cancel")
-            return cancelTransfer(chatId, bot);
-        const payeeId = await promptUser(bot, chatId, "👤 *Enter Payee ID:*");
-        if (payeeId.toLowerCase() === "cancel")
-            return cancelTransfer(chatId, bot);
         const quoteRequest = {
             sourceCountry: "usa",
             destinationCountry: "usa",
