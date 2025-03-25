@@ -1,27 +1,31 @@
 import TelegramBot from "node-telegram-bot-api";
 
 const newUserMenu = async (chatId: number, bot: TelegramBot): Promise<void> => {
-  await bot.sendMessage(
-    chatId,
-    `*👋 Welcome to Copperx USDC Bot!*\n\n` +
-      `Manage your *USDC transactions* easily from Telegram.\n` +
-      `Send, receive, and withdraw USDC securely—all in one place! 💼💰\n\n` +
-      `*🚀 Features:*\n\n` +
-      `🔹 *💰 Check Balance*\n\n` +
-      `🔹 *💸 Send USDC (Email/Wallet)*\n\n` +
-      `🔹 *🏦 Withdraw to Bank*\n\n` +
-      `🔹 *📜 View Transactions*\n\n` +
-      `🔹 *🔔 Real-Time Alerts*\n\n` +
-      `*🔑 Get started by logging in below:*`,
-    {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "🔑 Login to Copperx", callback_data: "login" }],
-        ],
-      },
-    }
-  );
+  try {
+    await bot.sendMessage(
+      chatId,
+      `*👋 Welcome to Copperx USDC Bot!*\n\n` +
+        `Easily manage your *USDC transactions* right from Telegram.\n\n` +
+        `💼 Send, receive, and withdraw USDC securely—all in one place!\n\n` +
+        `*🚀 Key Features:*\n` +
+        `🔹 *💰 Check Balance* – View your available funds.\n` +
+        `🔹 *💸 Send USDC* – Transfer via email or wallet.\n` +
+        `🔹 *🏦 Withdraw to Bank* – Move funds to a linked bank account.\n` +
+        `🔹 *📜 View Transactions* – Track your transaction history.\n` +
+        `🔹 *🔔 Real-Time Alerts* – Get notified of deposits and withdrawals.\n\n` +
+        `*🔑 Get started by logging in below:*`,
+      {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🔑 Login to Copperx", callback_data: "login" }],
+          ],
+        },
+      }
+    );
+  } catch (error) {
+    console.error("❌ Error sending new user menu:", error);
+  }
 };
 
 export default newUserMenu;

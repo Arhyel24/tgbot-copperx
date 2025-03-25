@@ -6,9 +6,10 @@ const showMainMenu = async (chatId, bot) => {
             `🔹 *Send Funds* – Transfer USDC securely.\n` +
             `🔹 *Withdraw to Bank* – Move funds to your 🏦 linked bank account.\n` +
             `🔹 *Receive Notifications* – Get 🔔 real-time deposit alerts.\n\n` +
-            `📢 *How to Use Commands*:\n` +
-            `To ask a question or give a command, start your message with *!*\n\n` +
-            `✅ Example: *!Check my balance* → Use the command */check_balances* to view your funds.\n\n` +
+            `📢 *How to Use Commands:*\n` +
+            `To ask a question or give a command, start your message with *!*.\n\n` +
+            `✅ Example:\n` +
+            `👉 *!Check my balance* → Use the command */check_balances* to view your funds.\n\n` +
             `*⚡ Select an option below to get started:*`, {
             parse_mode: "Markdown",
             reply_markup: {
@@ -18,7 +19,7 @@ const showMainMenu = async (chatId, bot) => {
                         { text: "💼 Wallet", callback_data: "wallet" },
                     ],
                     [
-                        { text: "🏧 Deposit funds", callback_data: "deposit" },
+                        { text: "🏧 Deposit Funds", callback_data: "deposit" },
                         { text: "💸 Funds Transfer", callback_data: "funds_transfer" },
                     ],
                     [{ text: "❓ Help & Support", callback_data: "help" }],

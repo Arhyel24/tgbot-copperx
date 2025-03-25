@@ -1,7 +1,32 @@
 # **Telegram Bot - With COPPERX Payout**
 
 ## **Overview**
-This is a Telegram bot built using Node.js and the `node-telegram-bot-api` library. The bot integrates with a backend API (CopperX) to provide functionalities such as wallet management, fund transfers, transaction history, payee management, and real-time deposit notifications via Pusher. It also uses MongoDB for session management and Express for handling webhooks.
+This is a Telegram bot built using Node.js and the `node-telegram-bot-api` library. The bot integrates with a backend API (CopperX) to provide functionalities such as:
+
+✅ **Wallet Management** – View balances, set default wallets, and check transaction history.  
+✅ **Fund Transfers** – Send USDC via email, wallet, or withdraw to a bank account.  
+✅ **Payee Management** – Add, edit, or remove payees for quick transactions.  
+✅ **Real-time Notifications** – Get instant deposit alerts via Pusher.  
+✅ **Session Management** – Uses MongoDB to store session data.  
+✅ **Webhook Handling** – Integrates with Express for secure event processing.  
+✅ **Text & Button Commands Support** – Users can interact with the bot via inline buttons or natural language text commands.
+
+### **⚡ Command Support**
+The bot supports **both inline buttons and natural language text commands** for a seamless user experience.  
+Users can type commands in a **conversational manner** instead of rigid syntax by putting "!" at the beginning of the sentence.
+
+### **📜 Example Text Commands**
+- **"!What is my balance?"** → The bot responds with your available USDC balance.  
+- **"!I want to withdraw funds."** → The bot guides you through the withdrawal process.  
+- **"!Show me my transaction history."** → Displays recent transactions.
+- **"!I need help with my account."** → Directs you to the support section.  
+
+### 🔹 Intelligent Processing
+- Detects **key phrases, context, and user intent**  
+- Matches messages with the correct action automatically  
+- Supports **context-aware replies**  
+
+With **Gemini AI**, the bot can handle **complex queries, follow-up interactions, and personalized responses**, making user interactions more intuitive and efficient.
 
 ### **Session Management with Encrypted Storage**  
 
