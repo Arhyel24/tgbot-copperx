@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger.js";
+import { logger } from "../utils/logger.js";
 const newUserMenu = async (chatId, bot) => {
     try {
         await bot.sendMessage(chatId, `*👋 Welcome to Copperx USDC Bot!*\n\n` +

@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import dotenv from "dotenv";
 import Session, { ISession } from "../models/session.js";
-import { logger } from "@/utils/logger.js";
+import { logger } from "../utils/logger.js";
 
 dotenv.config();
 

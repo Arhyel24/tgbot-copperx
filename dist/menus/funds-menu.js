@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger.js";
+import { logger } from "../utils/logger.js";
 const showFundsMenu = async (chatId, bot) => {
     try {
         await bot.sendMessage(chatId, `*💸 Funds Transfer*\n\n` +

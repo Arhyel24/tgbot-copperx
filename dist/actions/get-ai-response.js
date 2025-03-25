@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger.js";
+import { logger } from "../utils/logger.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({

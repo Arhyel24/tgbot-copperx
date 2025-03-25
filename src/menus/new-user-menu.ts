@@ -1,5 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
-import { logger } from "@/utils/logger.js";
+import { logger } from "../utils/logger.js";
 
 const newUserMenu = async (chatId: number, bot: TelegramBot): Promise<void> => {
   try {

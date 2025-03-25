@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger.js";
+import { logger } from "../utils/logger.js";
 const showPayeesMenu = async (chatId, bot) => {
     try {
         await bot.sendMessage(chatId, `*📋 Manage Payees*\n\n` +

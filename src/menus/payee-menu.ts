@@ -1,5 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
-import { logger } from "@/utils/logger.js";
+import { logger } from "../utils/logger.js";
 
 const showPayeesMenu = async (
   chatId: number,

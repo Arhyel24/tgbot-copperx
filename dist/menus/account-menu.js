@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger.js";
+import { logger } from "../utils/logger.js";
 const showAccountMenu = async (chatId, bot) => {
     try {
         await bot.sendMessage(chatId, `*🔑 Account Management*\n\n` +
